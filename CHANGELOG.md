@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.1 — 2026-10-26
+
+Fixes from a second live Light-tier run (Haiku orchestrator, headless Sonnet coder and reviewer, ticket T02 on the local path). The ticket merged, but the orchestrator started a duplicate coder, the reviewer searched the disk for a skill file, and STATE.md kept a stale integration tip. The launch and grant rules now apply to every harness, not only Claude Code.
+
+- Headless launch and completion (harness-adapters.md, section 1, cited by every harness file): runs start in the background with `exec`, so `$!` is the harness process, and the PID goes into STATE.md In flight at once. A run has finished only when its PID has exited (`kill -0` fails); a report file that exists while the PID is alive is not a result. The PID comes from `echo $!`, never a `ps` search. Never a second run for the same ticket and role while the recorded PID is alive. stderr (Codex: stdout and stderr) goes to `<main checkout>/.heimdall/reports/T<nn>-<role>-<r>.log`, always an absolute path, since the command runs inside the worktree. In Claude Code a background run outlives the shell call that started it; elsewhere that is UNVERIFIED, with `nohup` as the fallback. The old Claude Code template piped JSON into the report at launch, which created an empty report while the run was still working; it now writes `<report base>.json` and extracts `.result` after exit, keeping the cost and refused commands for Health.
+- Resume: a run that finished while the orchestrator was away is collected first; a live PID is confirmed with `ps -p <pid> -o args=`, because PIDs are reused after a reboot. The hello-world check launches headless runs exactly as the loop will.
+- Reviewer grants: the full command prefixes from HANDOFF Commands (`node --test`, `npm run typecheck`), never a bare interpreter or package manager (`node`, `npm`, `python`), which would run any code. Per harness: Claude Code `--allowedTools`; OpenCode's v2 `permissions` list (deny all, then allow the review commands; the v1 `permission:` map is the old form); pi `--tools read,bash` (no per-command grant); agy `--mode plan` (test runs UNVERIFIED); Codex has no per-command allow-list for `codex exec`, so the sandbox is the limit; Muse `--permission-profile` contents UNVERIFIED. Prefer a Claude Code or OpenCode reviewer when the review must be held to named commands.
+- Packets: pointers are absolute paths to project files; a rule from the skill is pasted into the packet, never cited by file name (checklist item 5), because a headless executor may not have the skill.
+- Merge: L6 step 5 sets STATE.md `Integration: <branch> @ <merge sha>`.
+- STATE.md migration compares the ticket table's header row with the template column by column. Each progress refresh also updates STATE.md's `Progress report:` line.
+
 ## 1.3.0 — 2026-10-26
 
 Review release: a live Light-tier run (Haiku orchestrator, Sonnet coder, Opus reviewer, one ticket on the local path) and a full review of the skill found 8 fixes, 9 gaps, and 8 improvements. All are addressed.

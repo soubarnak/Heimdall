@@ -72,4 +72,4 @@ At G6, runs the acceptance tests (one per Success Criterion), exercises the inte
 | Muse Code | Muse Wonder 1.0 | Muse Spark 1.3 subagents | headless Claude or Codex | cross-family review |
 | No subagents (pi, plain chat harness) | the session | the same session, cap 1 | a headless CLI from another vendor, or a fresh session | execution-loop.md, section 10 |
 
-Concrete model ids, effort levels, and selection flags: agent-model-map.md. Dispatch commands: harness-adapters.md.
+Concrete model ids, effort levels, and selection flags: agent-model-map.md. Dispatch commands: harness-adapters.md. A headless Codex or Muse reviewer is limited by its sandbox and the packet, not by named commands (harness-codex.md, harness-muse-code.md); cross-family review is usually worth that trade, so record it at G2. When the topology has both, a Claude Code or OpenCode reviewer can be held to exact command prefixes.

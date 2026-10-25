@@ -20,12 +20,12 @@ A checklist for running the build loop. Load it with STATE.md and HANDOFF.md at 
 | Claim | ready → in-progress; STATE.md: agent, round, start time | execution-loop.md, section 5, step 1 |
 | Worktree | `git worktree add -b heimdall/t<nn>-<slug> <worktree-root>/t<nn>-<slug> <integration-branch>`; reuse one that exists | section 5, step 2 |
 | Packet | assets/coder-packet.md → `.heimdall/packets/T<nn>-coder-<round>.md`; grade it | section 5, step 3 |
-| Dispatch | the topology's method; a background headless run's PID goes into STATE.md In flight | section 5, step 4; harness-adapters.md |
-| Collect | the final message → `.heimdall/reports/T<nn>-coder-<round>.md` | section 5, step 5 |
+| Dispatch | the topology's method; a headless run starts in the background with `exec`, its PID goes into STATE.md In flight; never a second run while that PID is alive | section 5, step 4; harness-adapters.md, section 1 |
+| Collect | only after the PID has exited (`kill -0` fails): the final message → `.heimdall/reports/T<nn>-coder-<round>.md` | section 5, step 5 |
 | Check | `bash .heimdall/ticket-checks.sh …` with the exact flags in section 5, step 6 (`--help` lists them) → `.heimdall/reports/T<nn>-checks-<round>.md`; route its codes (below) | section 5, step 6 |
 | Push and PR | merge path `pr`: push the branch; round 1 opens the PR; record Head; status in-review | section 5, step 7 |
 | Review | assets/review-packet.md → a fresh-context reviewer; post the verdict; set the status | section 6 |
-| Merge | L6 steps 1–8, one ticket at a time | merge-protocol.md, L6 |
+| Merge | L6 steps 1–8, one ticket at a time; STATE.md `Integration:` moves to the merge SHA | merge-protocol.md, L6 |
 | Close | the ticket closed with the merge SHA; worktree and branch removed; STATE.md | merge-protocol.md, L6, step 7 |
 | Wave merged | refresh the progress report; update the state snapshot; demo checkpoint after the first complete journey | execution-loop.md, section 9 |
 

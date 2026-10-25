@@ -17,7 +17,7 @@ Score the final prompt or packet against these items. Mark genuinely irrelevant 
 
 **Context**
 
-5. All necessary background and domain context is included or attached (or, for coding agents, the agent is told where to discover it).
+5. All necessary background and domain context is included or attached (or, for coding agents, the agent is told where to discover it: absolute paths to project files). Rules from Heimdall's own files are pasted, never cited by file name: the executor may not have the skill.
 6. Input data is clearly separated from instructions, using the delimiter style the target family's guide recommends (XML tags for Claude; XML tags or Markdown sections for most other families).
 7. Jargon and project-specific terms are defined or self-evident.
 8. Nothing irrelevant is included (no context bloat).

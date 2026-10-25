@@ -22,6 +22,7 @@ How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill
 16. Maintenance
 17. Audit and fixes (2026-10-26)
 18. Review and live Light-tier run (2026-10-26, version 1.3.0)
+19. Headless launch and grants for every harness (2026-10-26, version 1.3.1)
 ## 1. Summary
 
 The original repository held eight knowledge files for a claude.ai Project. Together they made Claude act as a prompt optimizer and as a "production orchestrator" that planned software through gates and then handed copy-paste packets to a separate coding agent, with the user ferrying reports back by hand. It assumed Claude models, the claude.ai interface, and Claude plan tiers throughout.
@@ -256,6 +257,7 @@ Unverified (marked in the files):
 - The exact argument form of Codex's `$skill-installer`; the PowerShell install snippet has not been run on Windows.
 - Grok Build headless flags (Agent Client Protocol is the official route) and the grok-code-fast guide wording.
 - Mistral Large 4 model id details (model card returned 404) and per-model `xhigh` support; Qwen3.8 `reasoning_effort` values beyond the Hugging Face card.
+- Headless runs (version 1.3.1): whether a background run outlives the launching shell call outside Claude Code (the `nohup` fallback is untested); when Codex's `-o` file appears; what OpenCode's `ask` effect does under `opencode run`, whether `"x *"` matches a bare `x`, and how `external_directory` rules behave; whether agy's plan mode may run tests; the contents of Muse permission profiles.
 
 Risks to watch:
 
@@ -302,3 +304,18 @@ Decisions:
 - **Less to load per loop session.** The per-harness adapters moved to one file per harness and the loop has a one-page card, so a G4–G5 session loads only what its topology uses.
 
 Not yet exercised live: concurrency above 1, merge path `pr` with real CI, Gitea, a change request, G6, G7, the chat kickoff, and Mermaid `init` rendering on GitHub. CHANGELOG.md lists every change.
+
+## 19. Headless launch and grants for every harness (2026-10-26, version 1.3.1)
+
+A second live run resumed the scratch build with Haiku as orchestrator and took T02 through the loop with a headless Sonnet coder and reviewer. The ticket merged with `CHECKS: PASS` and an APPROVE, but three defects showed. The orchestrator launched the coder in the background with a template that piped its JSON into the report file, saw the empty report, took the run for finished, and started a second coder in the same worktree. The orchestrator also wrote "tdd-protocol.md, section 6" into the review packet, and the headless reviewer ran `find /` to locate it. And STATE.md's integration line stayed at the pre-merge tip, because no step moved it.
+
+Decisions:
+
+- **Completion is the PID, never the file.** Every redirect creates its output file at launch, so the only reliable end-of-run signal is the process exiting. The rule lives once in harness-adapters.md, section 1 (launch with `exec` so `$!` is the harness process; wait with `kill -0`; never a second run while the PID is alive; collect after exit), and every harness file cites it with its own command shape. Claude Code keeps its raw JSON output, because the cost and the refused commands feed the Health record.
+- **Reviewer grants name commands, not interpreters.** A grant for `node` or `npm` lets a reviewer run any code, which defeats "the reviewer runs no scripts". Harnesses with per-command grants (Claude Code, OpenCode v2) get exact prefixes; the others say plainly that the packet is the only limit, and the topology prefers a reviewer harness that can be held to named commands.
+- **Packets carry rules, not citations.** A headless executor in another harness may not have the skill installed. A pasted rule costs a few lines; a cited file name costs the executor its turn budget.
+- **Merges move the recorded tip.** The next dispatch and every resumed session read the integration tip from STATE.md, so the merge step itself updates it.
+
+Re-run on 2026-10-26 with the 1.3.1 rules (Haiku orchestrator, four headless Claude Code runs, about $2): each run was launched once with `exec` and waited on with `kill -0`, and the raw JSON and log files sat beside the reports. The reviewer grants were `Bash(node --test:*)` and `Bash(npm run lint:*)`, and no packet named a skill file. STATE.md recorded the Light-tier accepted risk, the `Head` column, the cost and the refused commands in Health, and `Integration:` at the merge SHA. Two smaller slips followed. The orchestrator once read the PID from a `ps` search, caught a wrapper process, and corrected itself. The `Progress report:` line was not updated after a refresh. Both now have a rule.
+
+Verified for this change: `codex exec --help`, `muse exec --help`, `pi --help`, and `agy --help` on the installed CLIs, and the OpenCode v2 agents and permissions docs, all on 2026-10-26. What `ask` does in `opencode run`, whether agy's plan mode may run tests, and Muse permission-profile contents remain UNVERIFIED.

@@ -77,7 +77,7 @@ Exactly one merge runs at a time. For each approved ticket, in approval order:
    ```bash
    git switch <integration-branch> && git merge --squash heimdall/t<nn>-<slug> && git commit -m "<ticket title> (T<nn>)"
    ```
-5. **Record the merge SHA.** Merges are serial, so the integration tip right after the merge is the squash commit: remote, `git fetch origin && git merge --ff-only origin/<integration-branch>` in the main checkout, then `git rev-parse HEAD` (GitHub cross-check: `gh pr view <pr#> --json mergeCommit --jq .mergeCommit.oid`); local path, `git rev-parse HEAD`.
+5. **Record the merge SHA.** Merges are serial, so the integration tip right after the merge is the squash commit: remote, `git fetch origin && git merge --ff-only origin/<integration-branch>` in the main checkout, then `git rev-parse HEAD` (GitHub cross-check: `gh pr view <pr#> --json mergeCommit --jq .mergeCommit.oid`); local path, `git rev-parse HEAD`. Set STATE.md's `Integration: <integration-branch> @ <merge sha>` line to it, so the next dispatch and a resumed session start from the right tip.
 6. **Verify the integration tip** in the main checkout. With CI (HANDOFF's ARCH names it; T01 sets it up), poll every 30 seconds:
    - GitHub Actions report check runs, not legacy statuses: `gh api --paginate 'repos/{owner}/{repo}/commits/<merge-sha>/check-runs?per_page=100' --jq '.check_runs[].conclusion'` (one line per run, across every page). Finished when there is at least one line and none is `null`; green = only `success`, `neutral`, or `skipped`.
    - Gitea Actions report commit statuses: `tea api '/repos/{owner}/{repo}/commits/<merge-sha>/status' | jq -r '"\(.state) \(.total_count)"'`. Finished when `total_count` is at least 1 and the state is not `pending`; green = `success`.
