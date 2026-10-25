@@ -1,0 +1,14 @@
+{
+  "name": "heimdall",
+  "owner": {
+    "name": "soubarnak"
+  },
+  "description": "Heimdall: idea-to-shipment multi-agent build workflow for any harness and model.",
+  "plugins": [
+    {
+      "name": "heimdall",
+      "source": "./",
+      "description": "Idea-to-shipment multi-agent build workflow with research, gates, tickets, TDD, review, and conflict-free merging."
+    }
+  ]
+}

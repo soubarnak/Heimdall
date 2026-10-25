@@ -1,0 +1,10 @@
+# Heimdall runtime state (written by the skill inside projects; never committed)
+.heimdall/
+
+# Local tooling and OS files
+.DS_Store
+*.swp
+*~
+node_modules/
+.env
+.env.*
