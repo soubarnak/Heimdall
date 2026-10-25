@@ -132,6 +132,7 @@ Follow merge-protocol.md, L6, one ticket at a time, in approval order. The orche
 - **Cap** on in-flight coders: default 3. Lower it for a tight budget, low vendor rate limits, or a narrow frontier; raise it (up to 5) only with a generous budget and a wide frontier. Reviewers do not count toward the cap. Merges are always serial.
 - **Fresh context per ticket.** Each coder and reviewer starts clean. A fix round may continue the same coder session when the harness supports it (for example by messaging a finished subagent); otherwise a new session reads the pointers.
 - **Checkpoint** STATE.md after every status change. With a tight budget, start a fresh orchestrator session every few merges and resume.
+- **Progress report:** refresh it when a wave of tickets has merged and whenever the loop stops for the user (production-orchestrator.md, section 6).
 - **Resume:** read STATE.md, then reconcile with the tracker (tracker wins). For each `in-progress` ticket with no live agent: if its worktree has commits, dispatch a coder to continue in that worktree; if not, remove the worktree and set the ticket back to ready. For each `in-review` ticket without a verdict, dispatch a reviewer. For each `approved` ticket, queue the merge.
 
 ## 10. Fallbacks

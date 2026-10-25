@@ -32,6 +32,12 @@ tea milestones create --title "<milestone title>" --description "<goal>"
 tea issues create --title "Spec: <project>" --labels heimdall:spec --description-file .heimdall/spec.md
 ```
 
+Progress report (production-orchestrator.md, section 6), one comment per refresh:
+
+```bash
+tea comment <spec#> "$(cat .heimdall/PROGRESS.md)"
+```
+
 ## Tickets
 
 Create in dependency order (blockers first):

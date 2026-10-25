@@ -9,7 +9,7 @@ Gated, multi-agent orchestration for software. You guide the HUMAN through decis
 3. Operating modes · gate levels · entry threshold
 4. Gates G0–G7
 5. Context and session budgeting · resume
-6. Artifact rules
+6. Artifact rules · progress report
 7. Failure protocol · fix tickets · change requests
 8. Secrets, safety, and the standing authorization
 
@@ -29,7 +29,9 @@ Calibration (calibration.md) sets the profile.
   REPO_REPORT.md                   G0.5 output, brownfield only
   research/<topic>.md              research digests (assets/research-digest.md)
   briefings/<gate>.md              user briefings (assets/briefing.md)
-  design/                          G2.5 mockups
+  design/                          G2.5: option-<x>.html mockups, prototype/ screens, shots/ screenshots
+  PROGRESS.md                      the visual progress report, Markdown with Mermaid (assets/progress-report.md)
+  progress.html                    the same report as one offline page (assets/progress-report.html)
   tickets/T<nn>-<slug>.md          ticket drafts; with the local tracker, the tickets themselves
   packets/T<nn>-<role>-<round>.md  dispatched packets
   reports/T<nn>-…                  coder, review, merge reports and PR bodies
@@ -95,15 +97,20 @@ Run project-research.md, section 2 for every unsettled decision, then decide wit
 
 Same lock rule as G1. Write HANDOFF, the G2 briefing (what the user must do — accounts, keys by name, costs — and what to learn), and the Setup Packet (assets/setup-packet.md): sign-ins, harnesses, model pins, and a hello-world per dispatch method. Run setup steps yourself only with the user's approval.
 
-### G2.5 — Visual direction (UI-bearing builds; recommended)
-Offer: (a) in-session — 2–3 lightweight HTML mockups of the key screen (agent profile: `.heimdall/design/`; chat profile: artifacts if the app supports them); the user picks; or (b) delegated — a design ticket whose output the user approves from screenshots. The result is the Design Contract in HANDOFF.md. Unresolved UI direction on a UI-bearing build caps grades at B.
+### G2.5 — Visual direction and prototype (UI-bearing builds; recommended)
+1. **Propose:** (a) in-session — 2–3 lightweight HTML mockups of the key screen, each a distinct direction (agent profile: `.heimdall/design/option-<a|b|c>.html`; chat profile: artifacts if the app supports them); or (b) delegated — a design ticket whose output the user approves from screenshots.
+2. **Pick:** the user picks one, or asks for a blend (one more round at most).
+3. **Prototype:** extend the chosen direction to static, linked HTML screens with realistic sample data and no backend, in `.heimdall/design/prototype/` (`index.html` links every screen). Prototype mode: skip this step; the chosen mockup is the prototype. MVP: the screens of the core user journey, typically 3–5. Production: those screens plus their empty, loading, and error states. The user confirms or asks for changes (at most 2 rounds).
+4. **Lock:** the Design Contract in HANDOFF.md (direction, palette, type, density, layout, the prototype path), then refresh the progress report (section 6): its Design section shows the options shown, the chosen one, and the prototype screens.
+
+Unresolved UI direction on a UI-bearing build caps grades at B.
 
 ### G3 — Ticket graph (recommended)
 Break the spec into tickets (assets/ticket.md), following Matt Pocock's `to-tickets` rules:
 
 - **Vertical tracer-bullet slices:** each cuts a narrow, complete path through every layer it needs, is demoable or verifiable alone, and fits one fresh context window.
 - **T01 scaffold** first (merge-protocol.md, L2); prefactoring before features; wide refactors as expand–contract.
-- Each ticket: acceptance criteria tied to seams, **touch set** (modules and hotspots), tier, risk, and blocking edges. No file paths — the module map holds them.
+- Each ticket: acceptance criteria tied to seams, **touch set** (modules and hotspots), tier, risk, and blocking edges. No file paths — the module map holds them. A UI ticket names the prototype screen it implements, and its visual acceptance is a screenshot beside that screen.
 - **Validate the graph:** acyclic; every user story covered (US → T table); every pair of tickets with overlapping touch sets either has an edge or will be serialized by the scheduler; waves computed to show the expected parallelism.
 
 Show the breakdown as a numbered list (title, blocked by, what it delivers) with the waves, and ask once whether the granularity and edges look right. On confirmation:
@@ -120,20 +127,29 @@ execution-loop.md: the scheduler claims frontier tickets, dispatches coders in w
 3. Findings become tickets through the same loop. The G6 cleanup list (non-blocking smells collected during review) becomes one refactor ticket, run under green tests.
 
 ### G7 — Ship (mandatory)
-Release steps against the locked deployment target, CI green on the integration branch, domain and hosting, monitoring basics, security sign-off, a license and privacy line for user-facing apps, and the G7 briefing as the **operations handover** (run, deploy, monitor, back up, update, roll back; the post-ship backlog). Brownfield: open the release PR from the integration branch to the default branch. Close the spec issue and milestones; remove leftover worktrees (`git worktree prune`). Merging to the default branch (when it is not the integration branch), deploying, tagging, and publishing each need the user's explicit go-ahead for that specific action. Optional 5-line retro.
+Release steps against the locked deployment target, CI green on the integration branch, domain and hosting, monitoring basics, security sign-off, a license and privacy line for user-facing apps, and the G7 briefing as the **operations handover** (run, deploy, monitor, back up, update, roll back; the post-ship backlog). Brownfield: open the release PR from the integration branch to the default branch. Close the spec issue and milestones; remove leftover worktrees (`git worktree prune`). Refresh the progress report a last time: everything shipped, with the post-ship backlog as the next phase. Merging to the default branch (when it is not the integration branch), deploying, tagging, and publishing each need the user's explicit go-ahead for that specific action. Optional 5-line retro.
 
 ## 5. Context and session budgeting · resume
 
 Calibration records a budget (tight / standard / generous).
 
-- **Agent profile:** checkpoint STATE.md at every gate lock and every ticket status change, so any session — any harness, any model — can resume by invoking Heimdall in the project. Recommend a fresh orchestrator session after G2, after G3, and every few merges on a tight budget. "Checkpoint now" writes STATE.md immediately.
+- **Agent profile:** checkpoint STATE.md at every gate lock and every ticket status change, so any session — any harness, any model — can resume by invoking Heimdall in the project. Recommend a fresh orchestrator session after G2, after G3, and every few merges on a tight budget. "Checkpoint now" writes STATE.md immediately; "Show progress" refreshes the progress report (section 6).
 - **Chat profile:** at Build-mode entry, emit a Session Plan (assets/session-plan.md). Every chat session ends with the updated STATE.md and this carry instruction, verbatim: "Copy the STATE.md above — it's the only file you need to bring. Open a fresh chat in this project, paste it, and we continue at gate X."
 
 **Resume protocol:** read STATE.md → verify the project slug matches the work at hand (mismatch: stop and ask) → re-run calibration and compare with the recorded profile (changed harness or model: note it, re-check the topology) → compare the Heimdall version and the HANDOFF version with the files (stale: flag it) → in the build loop, reconcile with the tracker (execution-loop.md, section 9) → continue at the recorded point.
 
-## 6. Artifact rules
+## 6. Artifact rules · progress report
 
 **Emission rule (hard rule).** An artifact version that was never written or displayed DOES NOT EXIST. Agent profile: write the complete file, then give the path, the new version, and a 1–3 line summary. Chat profile: output the COMPLETE file, copy-ready, in that message — never a delta or a promise.
+
+**Progress report (visual).** A concise visual report of what has been built and what is proposed next, written for the user. Regenerate it, never hand-edit it, from STATE.md, HANDOFF.md, the spec's US → T table, and the tracker (the tracker wins on ticket status).
+
+- **Contents** (assets/progress-report.md): where the build is (the gate flow); what works so far (the spec's user stories in journey order, each built, being built, or planned); the build graph (tickets by wave, colored by status); the design for UI builds from G2.5 on (the options shown, the chosen direction, the prototype screens, and each built screen beside its prototype once UI tickets merge); what was done since the last report; the next phase as proposed (what it delivers, what waits on the user, risks); and "Your next steps".
+- **Style:** the IBM Carbon Design System. The Mermaid diagrams use its white theme (an `init` line with IBM Plex Sans and Carbon grays, and Carbon tag colors for status); the HTML page uses the white theme and g100 in dark mode. Both templates carry the tokens: copy them unchanged.
+- **Evidence:** every done item cites a gate lock date, an ADR, or a merge SHA and PR. Never report progress the tracker does not show. No secrets, code, or diffs.
+- **When:** at every gate lock from G1 on (G2.5 and G3 included), when a wave of tickets has merged, whenever the loop stops for the user, on resume, at G7, and when the user says "Show progress". Not at every ticket status change: STATE.md is that checkpoint.
+- **Agent profile:** write `.heimdall/PROGRESS.md` (Mermaid diagrams, which GitHub and Gitea render) and `.heimdall/progress.html` (assets/progress-report.html: one offline page without scripts that embeds the mockups and prototype screens from `.heimdall/design/`), and give the user both paths. With a GitHub or Gitea tracker, post PROGRESS.md as a comment on the spec issue (covered by the standing authorization, section 8); with the local tracker, the files are the report. When calibration found a headless browser, capture each design screen into `.heimdall/design/shots/`, for example `chromium --headless --screenshot=<png> --window-size=1280,800 "file://<absolute path>.html"`; otherwise the HTML page embeds the screens themselves.
+- **Chat profile:** show the Markdown version in full at every gate lock (emission rule). When the app supports artifacts, also render the HTML version as an artifact that links the mockup artifacts instead of embedding local files.
 
 **Versioning.** HANDOFF.md, spec.md, and STATE.md carry version, date, and project slug; STATE.md also records the Heimdall version (SKILL.md `metadata.version`). Every packet and report names the HANDOFF version it was generated against. After a HANDOFF bump, regenerate STATE.md's Handoff Digest.
 

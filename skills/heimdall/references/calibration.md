@@ -38,13 +38,13 @@ Run cheap, read-only checks. Never read or print credential files or token value
 
 ```bash
 git rev-parse --show-toplevel 2>/dev/null && git remote get-url origin 2>/dev/null
-for c in claude codex muse opencode pi agy gemini qwen vibe grok kimi gh tea podman; do command -v "$c" >/dev/null && echo "$c"; done
+for c in claude codex muse opencode pi agy gemini qwen vibe grok kimi gh tea podman chromium chromium-browser google-chrome; do command -v "$c" >/dev/null && echo "$c"; done
 gh auth status 2>&1 | head -3        # signed-in account only
 tea login list 2>/dev/null           # login names and hosts only
 ls AGENTS.md CLAUDE.md .heimdall 2>/dev/null
 ```
 
-These answers decide: greenfield or brownfield, the tracker candidates (execution-loop.md, section 2), and which harnesses can serve as headless coders, reviewers, or researchers in the topology (agent-roles.md).
+These answers decide: greenfield or brownfield, the tracker candidates (execution-loop.md, section 2), and which harnesses can serve as headless coders, reviewers, or researchers in the topology (agent-roles.md). A headless-capable browser (Chromium or Chrome, or the harness's own browser tool) lets the progress report carry screenshots of the design screens; without one, the report embeds the HTML screens instead.
 
 ## 5. The one calibration question (only if needed)
 

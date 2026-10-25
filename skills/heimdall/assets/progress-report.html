@@ -1,0 +1,148 @@
+<!doctype html>
+<!-- Heimdall progress report, HTML version (references/production-orchestrator.md, section 6).
+     Save as .heimdall/progress.html, next to .heimdall/design/, so the relative design paths resolve.
+     Same content and rules as assets/progress-report.md: regenerated, never hand-edited; every done item cites
+     a gate lock date, an ADR, or a merge SHA and PR; no secrets, code, or diffs.
+     One offline file: no scripts, no external fonts or stylesheets. The CSS carries IBM Carbon Design System tokens
+     (white theme, g100 in dark mode), matching the Mermaid colors in assets/progress-report.md. Keep it as is;
+     replace the <…> placeholders.
+     A block marked REPEAT is copied once per item; delete a section marked OPTIONAL when it does not apply.
+     Status classes: gates and stories use done | current | next (built = done, building = current, planned = next);
+     tickets use merged | review | progress | ready | human. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Progress — <project-slug></title>
+<style>
+  /* IBM Carbon Design System tokens: white theme, and g100 in dark mode. Tags use tag-background (20), tag-border (40),
+     tag-color (70); "waiting on you" uses the warning notification colors (yellow 10, support-warning yellow 30). */
+  :root { --bg:#ffffff; --layer:#f4f4f4; --fg:#161616; --muted:#525252; --line:#c6c6c6; --link:#0f62fe; --track:#e0e0e0; --bar:#0f62fe;
+    --ok-bg:#a7f0ba; --ok:#42be65; --ok-fg:#0e6027; --cur-bg:#d0e2ff; --cur:#78a9ff; --cur-fg:#0043ce;
+    --rev-bg:#e8daff; --rev:#be95ff; --rev-fg:#6929c4; --todo-bg:#e0e0e0; --todo:#a8a8a8; --todo-fg:#161616;
+    --hum-bg:#fcf4d6; --hum:#f1c21b; --hum-fg:#161616; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#161616; --layer:#262626; --fg:#f4f4f4; --muted:#c6c6c6; --line:#525252; --link:#78a9ff; --track:#393939; --bar:#4589ff;
+    --ok-bg:#0e6027; --ok:#24a148; --ok-fg:#a7f0ba; --cur-bg:#0043ce; --cur:#4589ff; --cur-fg:#d0e2ff;
+    --rev-bg:#6929c4; --rev:#a56eff; --rev-fg:#e8daff; --todo-bg:#525252; --todo:#8d8d8d; --todo-fg:#f4f4f4;
+    --hum-bg:#393939; --hum:#f1c21b; --hum-fg:#f4f4f4; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.43 "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; letter-spacing:.16px; }
+  main { max-width:1056px; margin:0 auto; padding:32px 16px 48px; }
+  h1 { font-size:28px; line-height:1.29; font-weight:400; margin:0 0 8px; }
+  h2 { font-size:20px; line-height:1.4; font-weight:400; margin:40px 0 16px; }
+  h3 { font-size:12px; line-height:1.33; font-weight:400; letter-spacing:.32px; margin:0 0 8px; color:var(--muted); }
+  .meta, small, figcaption { color:var(--muted); font-size:12px; letter-spacing:.32px; }
+  code, .sha { font-family:"IBM Plex Mono", Menlo, Consolas, monospace; }
+  .bar { height:8px; background:var(--track); overflow:hidden; margin:16px 0 8px; }
+  .bar span { display:block; height:100%; background:var(--bar); }
+  .flow { display:flex; flex-wrap:wrap; gap:8px 24px; list-style:none; padding:0; margin:0; }
+  .flow li { position:relative; padding:4px 12px; border-style:solid; border-width:1px; border-radius:24px; font-size:12px; letter-spacing:.32px; }
+  .flow li + li::before { content:"→"; position:absolute; left:-19px; color:var(--muted); }
+  @media (max-width:720px) { .flow { padding-left:24px; } }
+  .done, .merged { background:var(--ok-bg); border-color:var(--ok); color:var(--ok-fg); }
+  .current, .progress { background:var(--cur-bg); border-color:var(--cur); color:var(--cur-fg); }
+  .next, .ready { background:var(--todo-bg); border-color:var(--todo); color:var(--todo-fg); }
+  .review { background:var(--rev-bg); border-color:var(--rev); color:var(--rev-fg); }
+  .human { background:var(--hum-bg); border-color:var(--hum); color:var(--hum-fg); }
+  .waves { display:grid; grid-template-columns:repeat(auto-fit, minmax(192px, 1fr)); gap:16px; }
+  .wave { background:var(--layer); padding:16px; }
+  .ticket { border-style:solid; border-width:1px 1px 1px 3px; padding:8px 12px; margin-top:8px; }
+  .ticket small { display:block; color:inherit; }
+  .legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+  .legend span { border-style:solid; border-width:1px; border-radius:24px; padding:0 8px; font-size:12px; letter-spacing:.32px; }
+  .chosen { display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  .swatch { display:inline-block; width:24px; height:24px; border:1px solid var(--line); vertical-align:middle; }
+  .shots { display:grid; grid-template-columns:repeat(auto-fit, minmax(256px, 1fr)); gap:16px; margin-top:8px; }
+  figure { margin:0; background:var(--layer); padding:8px; }
+  .frame { position:relative; width:100%; aspect-ratio:16 / 10; overflow:hidden; background:#ffffff; }
+  .frame iframe { position:absolute; inset:0; width:200%; height:200%; border:0; transform:scale(.5); transform-origin:0 0; pointer-events:none; }
+  figure img { width:100%; display:block; }
+  figcaption { margin-top:8px; }
+  .badge { display:inline-block; padding:0 8px; border-radius:24px; font-size:12px; letter-spacing:.32px; background:var(--ok-bg); color:var(--ok-fg); }
+  .cols { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px; }
+  .card { background:var(--layer); padding:8px 16px 16px; }
+  ul, ol.steps { padding-left:20px; } li { margin:4px 0; }
+  a { color:var(--link); }
+</style>
+</head>
+<body>
+<main>
+  <h1><project name> — progress</h1>
+  <div class="meta"><YYYY-MM-DD> · <phase> · spec v<N> · HANDOFF v<N> · Heimdall v<version></div>
+  <div class="bar"><span style="width:<merged ÷ total × 100>%"></span></div>
+  <div class="meta"><b><closed> of <total> tickets merged</b> · <n> in flight · <n> waiting on you</div>
+
+  <h2>Where we are</h2>
+  <ol class="flow">
+    <li class="done">G0 Intake</li><li class="done">G1 Spec</li><li class="done">G2 Architecture</li>
+    <li class="current">G2.5 Design</li><li class="next">G3 Tickets</li><li class="next">G4–5 Build</li>
+    <li class="next">G6 QA</li><li class="next">G7 Ship</li>
+  </ol>
+
+  <h2>What works so far</h2>
+  <!-- The spec's user stories in journey order, at most 8; built = done, building = current, planned = next. -->
+  <ol class="flow">
+    <li class="done"><Sign up></li><!-- REPEAT per story -->
+  </ol>
+
+  <!-- OPTIONAL: from G3 on -->
+  <h2>Build graph</h2>
+  <div class="waves">
+    <section class="wave"><!-- REPEAT per wave; over 20 tickets, one summary line per wave instead of ticket cards -->
+      <h3>Wave <n></h3>
+      <div class="ticket merged"><b>T<nn></b> <title><small>#<issue> · merged <span class="sha"><sha></span></small></div><!-- REPEAT per ticket -->
+    </section>
+  </div>
+  <div class="legend"><span class="merged">merged</span><span class="review">in review</span><span class="progress">in progress</span><span class="ready">ready or blocked</span><span class="human">waiting on you</span></div>
+
+  <!-- OPTIONAL: UI-bearing builds, from the G2.5 lock on -->
+  <h2>Design</h2>
+  <div class="chosen">
+    <div><b>Chosen: <option name></b> <span class="badge">confirmed <YYYY-MM-DD></span><br><small><one line: type feel, density, layout></small></div>
+    <div><span class="swatch" style="background:<#hex>"></span><!-- REPEAT per palette color, at most 6 --></div>
+  </div>
+  <h3 style="margin-top:16px">Prototype</h3>
+  <div class="shots">
+    <figure><!-- REPEAT per prototype screen; use <img src="design/shots/<screen>.png" alt="<screen>"> instead of the frame when a screenshot exists -->
+      <div class="frame"><iframe src="design/prototype/<screen>.html" title="<screen>" loading="lazy"></iframe></div>
+      <figcaption><a href="design/prototype/<screen>.html"><screen name></a></figcaption>
+    </figure>
+  </div>
+  <h3 style="margin-top:16px">Options shown</h3>
+  <div class="shots">
+    <figure><!-- REPEAT per option; mark the chosen one with the badge -->
+      <div class="frame"><iframe src="design/option-<x>.html" title="Option <x>" loading="lazy"></iframe></div>
+      <figcaption><a href="design/option-<x>.html">Option <x></a> — <one line> <span class="badge">chosen</span></figcaption>
+    </figure>
+  </div>
+  <!-- OPTIONAL: once UI tickets merge -->
+  <h3 style="margin-top:16px">Built against the prototype</h3>
+  <div class="shots">
+    <figure><img src="<path to the UI ticket's screenshot>" alt="<screen> as built"><figcaption><screen> — T<nn>, merged <sha></figcaption></figure><!-- REPEAT -->
+  </div>
+
+  <div class="cols">
+    <section>
+      <h2>Done since the last report</h2>
+      <div class="card"><ul>
+        <li><G2 locked YYYY-MM-DD: stack in plain words (ADR 0001–0004)></li><!-- REPEAT -->
+      </ul></div>
+    </section>
+    <section>
+      <h2>Next phase (proposed)</h2>
+      <div class="card">
+        <p><The next gate or the next wave: what it will deliver.></p>
+        <ul>
+          <li><T<nn> title — what it delivers></li><!-- REPEAT -->
+          <li><b>Waiting on you:</b> <items with a recommended answer, or "nothing"></li>
+          <li><b>Risks:</b> <one line, or "none"></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <h2>Your next steps</h2>
+  <ol class="steps"><li><…></li></ol>
+</main>
+</body>
+</html>

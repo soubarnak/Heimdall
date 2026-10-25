@@ -143,7 +143,7 @@ Chat apps without file tools cannot install skills from a repository. Two option
 
 ```bash
 for f in ~/.agents/skills/heimdall/SKILL.md ~/.claude/skills/heimdall/SKILL.md ~/.qwen/skills/heimdall/SKILL.md; do
-  [ -f "$f" ] && echo "$f: $(sed -n 2p "$f")"
+  if [ -f "$f" ]; then echo "$f: $(sed -n 2p "$f")"; fi
 done
 ```
 

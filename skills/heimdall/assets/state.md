@@ -10,6 +10,7 @@ Integration: <branch> @ <sha>   Worktree root: <path>   Cap: <n> coders
 Topology: coders <tier → harness/model>; reviewer <harness/model>; researchers <harness/model>
 Gates locked: <G1 YYYY-MM-DD, G2 …>   Accepted risks: <grade exceptions or "none">
 Current: <gate, or "build loop">
+Progress report: .heimdall/PROGRESS.md and progress.html, refreshed <YYYY-MM-DD> at <gate or wave>
 
 ## Tickets
 | T | # | Title | Status | Tier | Touch set | Blocked by | Agent / round | PR | Merged |

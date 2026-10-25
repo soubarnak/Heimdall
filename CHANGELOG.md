@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 — 2026-10-26
+
+- Visual progress report: `.heimdall/PROGRESS.md` (Mermaid diagrams for GitHub and Gitea) and `.heimdall/progress.html` (one offline page). It shows the gate flow, what works so far, the build graph by wave, the chosen design with its mockups and prototype screens, what was done, and the proposed next phase. Refreshed at every gate lock, after each merged wave, when the loop stops for the user, and on "Show progress"; posted as a comment on the spec issue. New templates `assets/progress-report.md` and `assets/progress-report.html`.
+- Reports are styled with the IBM Carbon Design System: Mermaid in the white theme with Carbon tag colors for status; the HTML page in the white theme and g100 in dark mode.
+- G2.5 now ends with a prototype: after the user picks a mockup, the chosen direction is extended to the core screens (MVP) or the core screens with empty, loading, and error states (Production), and the user confirms it. UI tickets name the prototype screen they implement.
+- Calibration detects a headless Chromium or Chrome for design screenshots.
+- README: a usage guide.
+- INSTALL.md: the verify loop no longer exits with status 1 when the last target is absent.
+
+### Repository (since 1.0.0)
 
 - Repository made public.
 - README opens with install instructions for agents: a harness table, one universal install command, native alternatives, and a PowerShell path for Windows.

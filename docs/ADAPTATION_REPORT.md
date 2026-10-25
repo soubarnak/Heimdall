@@ -1,6 +1,6 @@
 # Heimdall Adaptation Report
 
-How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill that takes an idea or an SRS to a shipped application. Written 2026-10-25 for version 1.0.0.
+How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill that takes an idea or an SRS to a shipped application. Written 2026-10-25 for version 1.0.0; updated 2026-10-26 for 1.1.0 (visual progress report, G2.5 prototype).
 
 ## Contents
 
@@ -27,7 +27,7 @@ The original repository held eight knowledge files for a claude.ai Project. Toge
 
 The adaptation keeps that design's best ideas — calibration, complexity routing, decision gates, advisor stance for knowledge gaps, derived interviews, the 22-item checklist, artifact discipline, and the "Your next steps" rule — and changes what it is:
 
-- **One installable Agent Skill** (`skills/heimdall/`) instead of loose knowledge files: a 104-line `SKILL.md` entry point, 27 references loaded on demand, and 17 asset templates.
+- **One installable Agent Skill** (`skills/heimdall/`) instead of loose knowledge files: a 106-line `SKILL.md` entry point, 27 references loaded on demand, and 19 asset templates.
 - **It runs the build itself.** In an agent harness, Heimdall publishes a ticket graph to GitHub issues, Gitea issues, or local files, dispatches test-first coder agents into isolated git worktrees, sends every change to a fresh-context reviewer, and lands changes through one serial merger. The user signs off at a few gates instead of relaying every packet.
 - **It informs the user.** A Researcher role researches proactively at intake, architecture, and per ticket; every significant architecture choice becomes an ADR; briefings at G1, G2, and G7 say what was decided, what the user must decide, do, and learn, and what the risks and costs are.
 - **It is harness- and model-agnostic.** Detection replaces the old model/plan-tier question; 13 harnesses have adapters; 11 model families have prompting guides verified against vendor documentation on 2026-10-25; a tier map turns "Light / Standard / Frontier" into concrete model ids and selection flags per harness.
@@ -99,7 +99,7 @@ Defects found while reading it:
 | (none) | references/tracker-github.md, tracker-gitea.md, tracker-local.md | New: tracker implementations |
 | (none) | references/harness-adapters.md | New: dispatch methods and per-harness facts |
 | (none) | references/prompting-universal.md and eight family files | New: cross-vendor and per-family prompting |
-| Templates inside the orchestrator file | assets/*.md (17 files) | Extracted into fill-in templates: spec, handoff, state, decisions, briefing, research digest, ADR, repo report, setup packet, session plan, ticket, coder packet, return report, review packet, review report, merge packet, PR body |
+| Templates inside the orchestrator file | assets/ (19 files) | Extracted into fill-in templates: spec, handoff, state, decisions, briefing, research digest, ADR, repo report, setup packet, session plan, ticket, coder packet, return report, review packet, review report, merge packet, PR body |
 
 ## 5. Architecture of the skill
 
@@ -116,13 +116,15 @@ Defects found while reading it:
 | G0.5 Recon | Brownfield only: a Scout maps the existing codebase into a repo report | — |
 | G1 Spec | Spec locked from assets/spec.md with user stories, success criteria, NFRs, testing decisions, traceability to SRS ids; operating mode chosen; briefing | Mandatory |
 | G2 Architecture | Researched options, ADRs, module map planned for parallel work, hotspot plan, test seams, tracker choice, integration branch, agent topology (which harness and model per role), standing authorization for routine outward actions; briefing | Mandatory |
-| G2.5 Visual direction | UI builds: mockups or references, design contract | Recommended |
+| G2.5 Visual direction | UI builds: 2–3 mockups, the user's pick, a prototype of the core screens, design contract | Recommended |
 | G3 Ticket graph | Vertical-slice tickets with acceptance criteria, seams, touch sets, hotspot locks, size and risk, blocking edges; published to the tracker; bootstrap commit | Recommended |
 | G4–G5 Build loop | Scheduler: sync, collect reports, merge approved work, compute the frontier (ready, unblocked, disjoint touch sets and hotspots), order by critical path, dispatch up to the concurrency cap (default 3), checkpoint | Informational |
 | G6 QA | Whole-build review, QA agent, fixes as new tickets | Mandatory in Production |
 | G7 Ship | Release against the locked deployment target; operations handover briefing | Mandatory |
 
 Per ticket: the orchestrator creates the worktree and branch from the integration tip and writes the coder packet for the executing model; the coder works test-first and returns a report with a status token; the orchestrator validates the report, pushes, and opens a PR (`Closes #n`); a reviewer in a fresh context — never the coder, a different model family when available — audits on five independent axes (Spec, Standards, TDD audit, Security, Scope) and returns a verdict, with at most two fix rounds before escalation; the merger lands it. Failures route by cause (touch-set, seam, spec, environment, dependency, secret, destructive) to the right party; nothing asks the user from inside a subagent.
+
+From G1 on, a visual progress report (`.heimdall/PROGRESS.md` with Mermaid diagrams, and `.heimdall/progress.html`) shows the gate flow, what works so far, the build graph, the chosen design with its prototype, what was done, and the proposed next phase. It is styled with the IBM Carbon Design System, refreshed at gate locks, merged waves, and loop stops, and posted on the spec issue.
 
 The merge path is a pull request by default when a remote tracker exists, or a local squash merge when the user requires approval for every push. Own-PR approval is impossible under one account on GitHub and Gitea, so verdicts are recorded as a comment plus a label.
 

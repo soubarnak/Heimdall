@@ -30,6 +30,12 @@ gh api repos/{owner}/{repo}/milestones -f title="<milestone title>" -f descripti
 gh issue create --title "Spec: <project>" --label heimdall:spec --body-file .heimdall/spec.md
 ```
 
+Progress report (production-orchestrator.md, section 6), one comment per refresh:
+
+```bash
+gh issue comment <spec#> --body-file .heimdall/PROGRESS.md
+```
+
 ## Tickets
 
 Create tickets in dependency order (blockers first) so edges can reference real numbers:

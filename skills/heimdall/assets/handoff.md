@@ -55,7 +55,7 @@
 <repo standards files to follow (CONTRIBUTING.md, CODING_STANDARDS.md, AGENTS.md); conventions decided at G2>
 
 ## Design Contract  <!-- UI-bearing builds; G2.5 -->
-<palette, type feel, density, layout; approved mockup path, e.g. .heimdall/design/option-b.html>
+<palette, type feel, density, layout; the chosen mockup, e.g. .heimdall/design/option-b.html; the confirmed prototype, .heimdall/design/prototype/index.html, and its screens>
 
 ## Ticket Graph  <!-- G3; the tracker holds the tickets themselves -->
 | Wave | Tickets (T<nn> → #<issue>) | Notes |

@@ -32,6 +32,7 @@ Merged: <merge sha>             (empty until closed)
 | Preflight | `git rev-parse --show-toplevel` succeeds; the working tree is clean |
 | Setup | create `.heimdall/tickets/` and `.heimdall/reports/`; add `.heimdall/` to `.git/info/exclude` |
 | Spec issue | `.heimdall/spec.md` |
+| Progress report | `.heimdall/PROGRESS.md` and `.heimdall/progress.html`; nothing is posted |
 | Tickets | write `T<nn>-<slug>.md` from assets/ticket.md with `Status: ready` |
 | Blocking edges | the `Blocked by:` line |
 | Frontier query | `Status: ready`, every `Blocked by` ticket `closed`, touch set free (merge-protocol.md, L3) |
