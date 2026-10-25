@@ -117,9 +117,9 @@ Heimdall first calibrates: it detects the harness, the model, and the tools avai
 
 ### Answering questions
 
-- Heimdall asks at most 4 questions per message and at most 2 rounds per gate, as multiple choice with a recommended default.
+- Heimdall asks at most 4 questions per message and at most 2 rounds per gate, as multiple choice. Every question has exactly one recommended answer, listed first and marked "(Recommended)" with a one-line reason; this holds for gate questions, design picks, change requests, and questions from the build loop alike.
 - When a question needs knowledge you do not have, it explains the options and recommends one before asking you to choose.
-- Reply "Just proceed" at any point: it continues on its stated assumptions and records them.
+- Reply "Just proceed" at any point: it takes the recommended answers for everything you left open and records them as assumptions.
 - For anything visual it shows mockups instead of asking.
 
 ### Gates: what you get and what you do

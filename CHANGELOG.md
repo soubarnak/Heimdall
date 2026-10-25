@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 — 2026-10-26
+
+- Every question Heimdall asks the user now carries exactly one recommended answer, listed first and marked "(Recommended)" with a one-line reason. The rule lives in workflow-stages.md, Stage 6, and covers interviews, the calibration question, gate questions, the G2.5 design pick, the G3 confirmation, change requests, and batched `needs-human` items. Advisor decision blocks end with a per-decision recommendation.
+- "Just proceed" takes the recommended answers for every open question and records them as assumptions.
+
 ## 1.1.0 — 2026-10-26
 
 - Visual progress report: `.heimdall/PROGRESS.md` (Mermaid diagrams for GitHub and Gitea) and `.heimdall/progress.html` (one offline page). It shows the gate flow, what works so far, the build graph by wave, the chosen design with its mockups and prototype screens, what was done, and the proposed next phase. Refreshed at every gate lock, after each merged wave, when the loop stops for the user, and on "Show progress"; posted as a comment on the spec issue. New templates `assets/progress-report.md` and `assets/progress-report.html`.

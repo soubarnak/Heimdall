@@ -99,7 +99,7 @@ Same lock rule as G1. Write HANDOFF, the G2 briefing (what the user must do — 
 
 ### G2.5 — Visual direction and prototype (UI-bearing builds; recommended)
 1. **Propose:** (a) in-session — 2–3 lightweight HTML mockups of the key screen, each a distinct direction (agent profile: `.heimdall/design/option-<a|b|c>.html`; chat profile: artifacts if the app supports them); or (b) delegated — a design ticket whose output the user approves from screenshots.
-2. **Pick:** the user picks one, or asks for a blend (one more round at most).
+2. **Pick:** recommend one option with a one-line reason tied to the spec's users and goals; the user picks, or asks for a blend (one more round at most).
 3. **Prototype:** extend the chosen direction to static, linked HTML screens with realistic sample data and no backend, in `.heimdall/design/prototype/` (`index.html` links every screen). Prototype mode: skip this step; the chosen mockup is the prototype. MVP: the screens of the core user journey, typically 3–5. Production: those screens plus their empty, loading, and error states. The user confirms or asks for changes (at most 2 rounds).
 4. **Lock:** the Design Contract in HANDOFF.md (direction, palette, type, density, layout, the prototype path), then refresh the progress report (section 6): its Design section shows the options shown, the chosen one, and the prototype screens.
 
@@ -113,7 +113,7 @@ Break the spec into tickets (assets/ticket.md), following Matt Pocock's `to-tick
 - Each ticket: acceptance criteria tied to seams, **touch set** (modules and hotspots), tier, risk, and blocking edges. No file paths — the module map holds them. A UI ticket names the prototype screen it implements, and its visual acceptance is a screenshot beside that screen.
 - **Validate the graph:** acyclic; every user story covered (US → T table); every pair of tickets with overlapping touch sets either has an edge or will be serialized by the scheduler; waves computed to show the expected parallelism.
 
-Show the breakdown as a numbered list (title, blocked by, what it delivers) with the waves, and ask once whether the granularity and edges look right. On confirmation:
+Show the breakdown as a numbered list (title, blocked by, what it delivers) with the waves, and ask once whether the granularity and edges look right (recommended answer: confirm as shown, unless you flag a specific doubt). On confirmation:
 
 1. Tracker Setup, the spec issue, tickets in dependency order, blocking edges; fill STATE.md's ticket table.
 2. **Bootstrap commit** on the integration branch, before any coder starts (so nothing can conflict): `docs/adr/*`, and `AGENTS.md` with the commands, module map, conventions, and test-first rule (plus `CLAUDE.md` containing `@AGENTS.md` when Claude Code is in the topology). Brownfield: update the existing files in place.
@@ -169,7 +169,7 @@ YOUR NEXT STEPS
 
 **Fix tickets (bugs):** a bug restores conformance to the spec; it never amends it, so it never enters the change-request flow. Pre-ship: a failing review or QA finding. Post-ship: a ticket of kind `bug` — reproduction steps as input, a reproducing test first (tdd-protocol.md, section 7), acceptance = the reproduction no longer reproduces and the suite is green — run through the same loop, logged under STATE.md Fixes. No re-gating.
 
-**Change requests (scope changes):** never absorbed silently. Assess the impact on the spec and the ticket graph → show the cost (which tickets change, which are added, which merged work is affected) → the user chooses: amend (spec v+1, new or changed tickets, a superseding ADR if the architecture moves) or park it in the backlog.
+**Change requests (scope changes):** never absorbed silently. Assess the impact on the spec and the ticket graph → show the cost (which tickets change, which are added, which merged work is affected) → recommend amend or park with a one-line reason → the user chooses: amend (spec v+1, new or changed tickets, a superseding ADR if the architecture moves) or park it in the backlog.
 
 ## 8. Secrets, safety, and the standing authorization (hard rules, all modes)
 

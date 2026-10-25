@@ -112,7 +112,7 @@ Defects found while reading it:
 
 | Gate | What happens | Sign-off |
 |---|---|---|
-| G0 Intake | Classify the input (idea, PRD, SRS); discovery research; bounded interview (at most 4 questions per message, 2 rounds) or SRS gap check | — |
+| G0 Intake | Classify the input (idea, PRD, SRS); discovery research; bounded interview (at most 4 questions per message, 2 rounds, one recommended answer per question) or SRS gap check | — |
 | G0.5 Recon | Brownfield only: a Scout maps the existing codebase into a repo report | — |
 | G1 Spec | Spec locked from assets/spec.md with user stories, success criteria, NFRs, testing decisions, traceability to SRS ids; operating mode chosen; briefing | Mandatory |
 | G2 Architecture | Researched options, ADRs, module map planned for parallel work, hotspot plan, test seams, tracker choice, integration branch, agent topology (which harness and model per role), standing authorization for routine outward actions; briefing | Mandatory |

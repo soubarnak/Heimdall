@@ -48,7 +48,7 @@ These answers decide: greenfield or brownfield, the tracker candidates (executio
 
 ## 5. The one calibration question (only if needed)
 
-Ask only what detection cannot answer, in one message, using the harness's question tool (harness-adapters.md, section 2) or numbered options:
+Ask only what detection cannot answer, in one message, using the harness's question tool (harness-adapters.md, section 2) or numbered options, with one option marked "(Recommended)" from the evidence (budget: standard when nothing points either way):
 
 - the **budget**: tight (small plan or rate limits — fewer agents, fewer research questions), standard, or generous (many parallel agents);
 - the model or effort, only if you could not determine it.

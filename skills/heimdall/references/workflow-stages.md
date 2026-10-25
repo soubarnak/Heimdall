@@ -75,8 +75,9 @@ Bounds (preference gaps only):
 - Max 4 questions per round; max 2 rounds; hard stop after.
 - Only missing-critical items. Never ask about inferable or missing-optional items.
 - Prefer multiple-choice or yes/no. Use the harness's structured question tool when it has one (harness-adapters.md, section 2 lists them); otherwise number the options in plain text.
+- **Exactly one recommended answer per question**, everywhere Heimdall asks the user anything (interviews, calibration, gates, design picks, change requests, `needs-human` items): list it first, mark it "(Recommended)", and give a one-line reason grounded in the evidence. For a yes/no question, say which answer you recommend. For a pure preference, recommend the conventional default and say that it is one. If you cannot recommend an answer because the user lacks the knowledge to choose, the item is a knowledge gap: Stage 5 and the advisor playbook first.
 - Skip entirely, and say so, if the input already satisfies the checklist.
-- "Just proceed" or partial answers → proceed immediately; list assumptions in Delivery.
+- "Just proceed" or partial answers → proceed immediately on the recommended answers for everything unanswered; list them as assumptions in Delivery (Build mode: in the gate's lock message and Settled Decisions).
 
 Goal: a deliverable scoring ≥95% on the checklist — not a biography of the task.
 

@@ -3,7 +3,7 @@ name: heimdall
 description: Idea-to-shipment orchestration for building software with coordinated AI agents. Takes a vague idea or a complete SRS, researches what the user does not know, locks a spec and architecture through decision gates, breaks the work into a ticket graph on GitHub issues, Gitea issues, or local files, then runs parallel test-first coder agents (one git worktree per ticket), fresh-context reviewer agents, and a serial merger so work lands without merge conflicts, through QA to release. Harness- and model-agnostic (Claude Code, Codex CLI, Muse Code, OpenCode, pi, Gemini and Antigravity CLI, Qwen Code, Vibe, Grok Build, Kimi, Cursor, Copilot; Claude, GPT, Muse, DeepSeek, Qwen, Gemini, Mistral, Grok, Kimi, GLM, MiniMax). Also writes optimized prompts and model recommendations. Use when the user wants an app or feature built from an idea or SRS, says "use Heimdall" or "take this idea to shipment", or wants a prompt optimized for a specific model.
 compatibility: Agent profile needs a shell and git 2.38 or later. GitHub tracking needs gh; Gitea tracking needs tea; parallel agents need subagents or a headless agent CLI. Chat apps without tools run the planning gates and hand the build loop to a coding agent.
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: soubarnak
   repository: https://github.com/soubarnak/Heimdall
 ---
@@ -94,7 +94,7 @@ Asset templates (fill, never improvise the shape): assets/spec.md, assets/handof
 - **Preserve the user's intent.** Optimize the how, never the what.
 - **Serve informed users.** When a decision rests on knowledge the user lacks, research it and shift to advisor stance before proceeding. Never extract a decision the user is not equipped to make; never decide a knowledge gap silently.
 - **Show, don't ask, for UI.** Resolve visual ambiguity with references and mockups (G2.5), not more questions.
-- **Interview once, derived not improvised.** Questions map 1:1 from unmet critical items in the active decision set, minus anything settled or answered. At most 4 questions per message, at most 2 rounds per gate, multiple choice with a recommended default, skipped when the input is complete. "Just proceed" is always respected: proceed on stated assumptions and grade accordingly.
+- **Interview once, derived not improvised.** Questions map 1:1 from unmet critical items in the active decision set, minus anything settled or answered. At most 4 questions per message, at most 2 rounds per gate, multiple choice, skipped when the input is complete. **Every question carries exactly one recommended answer** with a one-line reason (workflow-stages.md, Stage 6). "Just proceed" is always respected: take the recommended answers, state them as assumptions, and grade accordingly.
 - **Prompting authority** is prompting-universal.md plus the target family's file. Every packet is written for the model and harness that will run it. Never invent techniques those files do not support.
 - **Agents never ask the user.** Subagents and headless runs stop and report; the orchestrator asks.
 - **No raw code or full diffs in chat.** In the chat profile, ask for reports, never pasted code.

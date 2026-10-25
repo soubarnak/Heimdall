@@ -19,8 +19,8 @@ You do the research now (use web search, documentation tools such as Context7, o
 
 - One block per decision, labeled: `DECISION 1: Tech stack`.
 - Inside each block: 2–4 options, each with a two-line plain-language description, a one-line pro, a one-line con, and who it suits.
-- End each block with **"Your call:"** followed by a direct question that the block above now makes answerable.
-- After all blocks: your recommendation with a one-line reason, marked as a recommendation the user may accept or override.
+- End each block with **"Recommendation:"** (one option and a one-line reason) and **"Your call:"** followed by a direct question that the block above now makes answerable.
+- After all blocks: one line listing your recommendations, which the user may accept together ("go with your recommendations") or override one by one.
 - Define every piece of jargon inline. Test: a smart person with zero domain background can make each call after reading the block.
 - Cite sources for factual claims that could be stale (prices, versions, limits). If no browsing tool is available, say so and mark such claims as "from training data, verify".
 

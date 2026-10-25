@@ -29,7 +29,7 @@ The user has already done the thinking. Respect it: ask only about gaps and cont
    - terms are used consistently (one word, one meaning — the Glossary);
    - no two requirements contradict each other;
    - out of scope is explicit.
-4. **Questions** only for missing-critical gaps and contradictions — at most 4 per message, at most 2 rounds, multiple choice with a recommended default. Knowledge gaps go to research-advisor-playbook.md first. Everything else becomes a listed assumption the user can override at G1.
+4. **Questions** only for missing-critical gaps and contradictions — at most 4 per message, at most 2 rounds, multiple choice with one recommended answer each (workflow-stages.md, Stage 6). Knowledge gaps go to research-advisor-playbook.md first. Everything else becomes a listed assumption the user can override at G1.
 5. **Draft** the spec, grade it, and present it for G1.
 
 ## 3. Idea path — bounded interview plus advisor

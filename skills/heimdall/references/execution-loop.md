@@ -123,7 +123,7 @@ Follow merge-protocol.md, L6, one ticket at a time, in approval order. The orche
 | Integration tip red | Stop dispatching; fix-forward ticket first, or revert the merge (a new commit). |
 | Architecture problem (module map or seam wrong) | Stop dispatching to the affected modules; revision loop to G2 or G3 with the user. |
 
-**needs-human batching:** collect questions across tickets and ask them together when the user is present (at most 4 per message, multiple choice). In an unattended run, keep working on the rest of the frontier; when nothing else can move, stop and report.
+**needs-human batching:** collect questions across tickets and ask them together when the user is present (at most 4 per message, multiple choice, each with one recommended answer and its reason). In an unattended run, keep working on the rest of the frontier; when nothing else can move, stop and report.
 
 **Health rule:** if 2 of the last 4 merged tickets needed retries, a tier bump, or the full fix-round cap, pause dispatching and hold a health check: ticket size, seam quality, tier and family fit, packet quality. Record the cause tally in STATE.md.
 
