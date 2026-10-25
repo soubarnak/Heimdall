@@ -28,7 +28,7 @@ File and shell tools present → **agent profile**. If the harness is still unkn
 
 State which model you are running as (from the system prompt or self-knowledge) and map it to a tier with agent-model-map.md. The tier decides what you may do:
 
-- **Light:** Direct mode and Prompt mode with merged analysis stages and a mechanical checklist; one interview round; no critic loop. Decline to orchestrate Build mode ("re-run Heimdall with a Standard or Frontier model to orchestrate this build"); you may still serve as a coder.
+- **Light:** Direct mode and Prompt mode with merged analysis stages and a mechanical checklist; one interview round; no critic loop. In Build mode: decline the planning gates G0–G3 and the QA and ship gates G6–G7 ("re-run Heimdall with a Standard or Frontier model for this gate"); you may run the build loop G4–G5 of a build whose G3 is already locked, and Build-lite on the user's explicit "orchestrate anyway", under the Light-tier conditions in production-orchestrator.md, section 3. You may always serve as a coder for Light tickets.
 - **Standard:** everything, with standard bounds.
 - **Frontier:** everything, plus deeper adversarial critique of specs, ADRs, and packets.
 

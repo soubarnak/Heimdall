@@ -85,7 +85,7 @@ Goal: a deliverable scoring ≥95% on the checklist — not a biography of the t
 
 FIRST, the mode decision, driven by the Stage 1.5 class and the profile (SKILL.md, "Route"):
 
-- C3 (or C2 software) and an orchestrator tier of Standard or above → **Build mode** (production-orchestrator.md). Stages 8–14 run inside the build to write every packet; delivery follows the gate structure.
+- C3 (or C2 software) and an orchestrator tier of Standard or above → **Build mode** (production-orchestrator.md). Stages 8–14 run inside the build to write every packet; delivery follows the gate structure. A Light-tier orchestrator: the build loop of a planned build, or Build-lite on "orchestrate anyway", under the Light-tier conditions (production-orchestrator.md, section 3); otherwise decline the gate.
 - C0/C1 inside a coding-agent harness, user wants the work done → **Direct mode**: apply Stage 7.5, state observable acceptance criteria, build test-first (tdd-protocol.md), verify, report.
 - The user wants a prompt, a model recommendation, or a workflow plan → **Prompt mode**: continue below.
 

@@ -73,7 +73,12 @@ When the user is not watching, informational events proceed, and mandatory gates
 
 **Backward movement is normal:** evidence in the loop may trigger a revision loop to G2 or G3, logged in STATE.md.
 
-**Entry threshold:** Build mode when the deliverable is software that needs two or more tickets, AND the orchestrator is Standard tier or above. A Light-tier orchestrator declines ("re-run Heimdall with a Standard or Frontier model to orchestrate this build") but may serve as a coder. **Build-lite** (C2): 1–3 tickets, G1 and G2 signed off together, local tracker by default, cap 1 — still test-first, still a fresh-context review. Below the threshold (one-file changes, scripts, small fixes): Direct mode. If `.heimdall/STATE.md` exists, new work enters through the change-request flow or as a fix ticket, never as a fresh build.
+**Entry threshold:** Build mode when the deliverable is software that needs two or more tickets, AND the orchestrator is Standard tier or above for the planning gates. A Light-tier orchestrator declines G0–G3 and G6–G7 ("re-run Heimdall with a Standard or Frontier model for this gate") — a weak spec or module map flows into every ticket and no later guard catches it — but it may run two things:
+
+- **The build loop (G4–G5) of an already-planned build:** resume from a STATE.md whose G3 is locked. Conditions: every packet carries the Stage 10 compensation layer (workflow-stages.md); cap 1; the reviewer is Standard tier or above (a headless or cross-family reviewer when the session's model is Light); a health check after any single retry, tier bump, or full fix round (instead of 2 of the last 4); revision loops to G2 or G3 and change requests stop with "re-run with a Standard or Frontier model"; STATE.md Accepted risks records "loop orchestrated at Light tier".
+- **Build-lite (1–3 tickets)** only on the user's explicit "orchestrate anyway" after a one-line warning; the grade caps at C and the same loop conditions apply.
+
+A Light model may always serve as a coder for Light tickets. **Build-lite** (C2): 1–3 tickets, G1 and G2 signed off together, local tracker by default, cap 1 — still test-first, still a fresh-context review. Below the threshold (one-file changes, scripts, small fixes): Direct mode. If `.heimdall/STATE.md` exists, new work enters through the change-request flow or as a fix ticket, never as a fresh build.
 
 ## 4. Gates
 

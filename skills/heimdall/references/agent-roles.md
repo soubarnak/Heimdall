@@ -17,7 +17,7 @@ Who does what in Build mode. Each role gets its own context, a packet built from
 
 ## Orchestrator
 
-Runs every gate and the scheduler (execution-loop.md). It writes packets from the asset templates, scores them against checklist-and-grading.md, adapts them to the executor's family (`prompting-<family>.md`), and dispatches them (harness-adapters.md). It performs clean merges with tracker commands, because those need no code reading. A Light-tier model never orchestrates Build mode; it may still be a coder for Light tickets.
+Runs every gate and the scheduler (execution-loop.md). It writes packets from the asset templates, scores them against checklist-and-grading.md, adapts them to the executor's family (`prompting-<family>.md`), and dispatches them (harness-adapters.md). It performs clean merges with tracker commands, because those need no code reading. A Light-tier model never runs the planning gates (G0–G3) or G6–G7; it may run the build loop of a planned build, or Build-lite on the user's explicit request, under the Light-tier conditions (production-orchestrator.md, section 3), and it may always be a coder for Light tickets.
 
 ## Researcher
 

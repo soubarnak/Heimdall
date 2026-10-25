@@ -14,7 +14,7 @@ Budget rule: recommend the LOWEST capable tier; never default upward "to be safe
 
 | Role | Tier | Effort |
 |---|---|---|
-| Orchestrator | Frontier (Standard acceptable) | the family's default; one step higher for G1–G3 |
+| Orchestrator | Frontier (Standard acceptable; Light only for the build loop or Build-lite — production-orchestrator.md, section 3) | the family's default; one step higher for G1–G3 |
 | Researcher | Standard (Frontier for synthesis across many sources) | high |
 | Scout | Light | low–medium |
 | Coder | per ticket (set at G3) | Light low · Standard default · Frontier high |

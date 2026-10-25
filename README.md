@@ -178,6 +178,7 @@ Secrets stay out of everything Heimdall writes. It names them ("set STRIPE_SECRE
 - **Build-lite:** for 1–3 tickets. G1 and G2 are signed off together, tickets default to local files, and one coder works at a time; it is still test-first and still reviewed.
 - **Parallelism:** up to 3 coders at once by default (up to 5 with a generous budget). Reviewers do not count toward the cap, and merges are always one at a time. Without subagents or a headless agent CLI, Heimdall works through tickets one by one.
 - **Tracker:** GitHub (`gh auth login`), Gitea (`tea login add`), or local files when neither is available.
+- **Model tiers:** the planning gates (G0–G3) and G6–G7 need a Standard or Frontier model as orchestrator (Sonnet, GPT-6.1 Sol, Muse Spark, Qwen Plus, or stronger). A Light model (Haiku, GPT-6 Luna, DeepSeek Flash, Qwen Flash) can run the build loop of an already-planned build with one coder at a time, a stronger reviewer, and hardened packets, or Build-lite when you say "orchestrate anyway"; it can always be a coder for Light tickets.
 
 ### Files Heimdall writes
 
