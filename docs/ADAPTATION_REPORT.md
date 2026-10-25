@@ -31,7 +31,7 @@ The adaptation keeps that design's best ideas — calibration, complexity routin
 - **It runs the build itself.** In an agent harness, Heimdall publishes a ticket graph to GitHub issues, Gitea issues, or local files, dispatches test-first coder agents into isolated git worktrees, sends every change to a fresh-context reviewer, and lands changes through one serial merger. The user signs off at a few gates instead of relaying every packet.
 - **It informs the user.** A Researcher role researches proactively at intake, architecture, and per ticket; every significant architecture choice becomes an ADR; briefings at G1, G2, and G7 say what was decided, what the user must decide, do, and learn, and what the risks and costs are.
 - **It is harness- and model-agnostic.** Detection replaces the old model/plan-tier question; 13 harnesses have adapters; 11 model families have prompting guides verified against vendor documentation on 2026-10-25; a tier map turns "Light / Standard / Frontier" into concrete model ids and selection flags per harness.
-- **It installs from the repository URL.** INSTALL.md is written for an agent: per-harness commands, private-repository authentication, verification, update, and uninstall, plus `scripts/install.sh` that covers every harness.
+- **It installs from the repository URL.** The README and INSTALL.md are written for an agent: a harness table, one universal install command, native alternatives, verification, update, and uninstall, backed by `scripts/install.sh` for every harness.
 
 ## 2. What the original repository was
 
@@ -75,7 +75,7 @@ Defects found while reading it:
 | Coder and reviewer agents | agent-roles.md; coder-packet, review-packet, return-report, review-report assets |
 | Test-driven development modeled on Matt Pocock's skills | tdd-protocol.md (adapted from mattpocock/skills, MIT) |
 | Automated research, architecture decisions, telling the user what to do or learn | project-research.md, Researcher role, assets research-digest.md, adr.md, briefing.md |
-| Private GitHub repository "Heimdall" that an agent can install from | this repository, INSTALL.md, scripts/install.sh, .claude-plugin/ |
+| GitHub repository "Heimdall" that an agent can install from (created private, made public on 2026-10-25 at the user's request) | this repository, README.md, INSTALL.md, scripts/install.sh, .claude-plugin/ |
 
 ## 4. File mapping: original to skill
 
@@ -224,9 +224,9 @@ Key prompting findings that shape packets (full detail and sources in each famil
 ## 12. Installation design
 
 - **Agent Skills specification:** `name` equals the directory name (`heimdall`), description 949 of 1024 characters, compatibility 248 of 500, `metadata` values are strings, body under 500 lines. `scripts/validate.sh` checks all of this.
-- **Install paths, in order of preference per harness:** the Claude Code plugin marketplace (this repository is its own marketplace); the Skills CLI (`npx skills add soubarnak/Heimdall`), which handles private repositories through git credentials, then `gh repo clone`, then SSH; harness-native installers (`gemini skills install`, `muse skills install` from a clone, `pi install git:…`, Codex `$skill-installer`); and a universal fallback, `git clone` plus `scripts/install.sh`.
+- **Install paths:** the universal method, `git clone` plus `scripts/install.sh --harness <name>`, works in every harness that runs bash and is the default the README gives agents; native alternatives are the Claude Code plugin marketplace (this repository is its own marketplace), the Skills CLI (`npx skills add soubarnak/Heimdall`), `muse skills install` from a clone, `pi install git:…`, `gemini skills install`, and Codex `$skill-installer`. Windows without bash gets a PowerShell copy snippet.
 - **scripts/install.sh** links (user scope) or copies (project scope) the skill into `~/.agents/skills`, `~/.claude/skills`, and `~/.qwen/skills` (or the project equivalents, plus `.grok/skills`), detects harnesses on `PATH`, refuses to overwrite directories it did not create without `--force`, and supports `--dry-run` and `--uninstall`.
-- **Private repository:** every method uses the user's own credentials (`gh auth login`, `gh auth setup-git`). INSTALL.md tells the installing agent never to ask for a token in chat.
+- **Public repository:** installs need no credentials. Tracker operations use the user's own `gh` or `tea` sign-in, and the skill never handles tokens.
 
 ## 13. Research method and sources
 
@@ -249,7 +249,7 @@ Limits by design:
 Unverified (marked in the files):
 
 - Antigravity CLI skill folders and instruction file; question tools for Gemini CLI, Qwen Code, Grok Build, Kimi Code CLI, Cursor, and GitHub Copilot; pi's `ask_question` behavior.
-- Private-repository authentication for `gemini skills install` and `pi install`; the exact argument form of Codex's `$skill-installer`.
+- The exact argument form of Codex's `$skill-installer`; the PowerShell install snippet has not been run on Windows.
 - Grok Build headless flags (Agent Client Protocol is the official route) and the grok-code-fast guide wording.
 - Mistral Large 4 model id details (model card returned 404) and per-model `xhigh` support; Qwen3.8 `reasoning_effort` values beyond the Hugging Face card.
 

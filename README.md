@@ -4,12 +4,56 @@ Heimdall is an Agent Skill that takes a software idea, or a finished Software Re
 
 It is harness- and model-agnostic. The same skill runs in Claude Code, Codex CLI, Muse Code, OpenCode, pi, Gemini CLI, Antigravity CLI, Qwen Code, Mistral Vibe, Grok Build, Kimi Code CLI, Cursor, and GitHub Copilot, and it writes every prompt for the model family that will execute it: Claude, GPT and Codex, Muse, DeepSeek, Qwen, Gemini, Mistral, Grok, Kimi, GLM, and MiniMax.
 
-**Install:** give your coding agent this repository's URL and ask it to follow [INSTALL.md](INSTALL.md). The repository is private, so the agent needs your GitHub access (`gh auth login`).
+## Install
 
-In Claude Code you can also install it directly:
+Give your AI coding agent this repository's URL and say "install this skill". The steps below are written for that agent; people can follow them too. Full details, alternatives, and troubleshooting are in [INSTALL.md](INSTALL.md) ([raw](https://raw.githubusercontent.com/soubarnak/Heimdall/main/INSTALL.md)).
 
+### Instructions for the installing agent
+
+1. **Find your harness** in the table below: the tool you are running in, not the model. If you cannot tell, ask the user. If you have no shell or file tools (a chat app such as claude.ai, ChatGPT, or Meta AI), you cannot install skills; follow "Chat apps" in INSTALL.md instead.
+2. **Run the install command** for your harness. The repository is public, so no credentials are needed. Use user scope (all projects) unless the user asks for one project only.
+3. **Verify:** the file `SKILL.md` exists in the target folder and its frontmatter says `name: heimdall`.
+4. **Tell the user** where you installed it, that skills load when a session starts so they must start a new session, and how to invoke it (last column). Mention the tracker setup in INSTALL.md if they want GitHub or Gitea issues.
+
+Do not edit the skill files while installing, and do not install Docker; Heimdall uses rootless podman when a project needs containers.
+
+### Install command per harness
+
+The universal command works in every harness that can run bash (Linux, macOS, WSL, Git Bash). Replace `<harness>` with the value in the second column.
+
+```bash
+d="$HOME/.local/share/heimdall"
+if [ -d "$d/.git" ]; then git -C "$d" pull --ff-only; else git clone --depth 1 https://github.com/soubarnak/Heimdall.git "$d"; fi
+"$d/scripts/install.sh" --harness <harness>
 ```
-/plugin install heimdall --marketplace soubarnak/Heimdall
+
+| Harness | `<harness>` | Native alternative | Invoke with |
+|---|---|---|---|
+| Claude Code | `claude` | `claude plugin install heimdall --marketplace soubarnak/Heimdall` | `/heimdall` (plugin: `/heimdall:heimdall`) |
+| Codex CLI | `codex` | `npx skills add soubarnak/Heimdall -g -a codex` | `$heimdall` or `/skills` |
+| Muse Code | `muse` | `muse skills install "$d/skills/heimdall" --scope user` after cloning | `/heimdall` |
+| OpenCode | `opencode` | — | ask "use Heimdall" |
+| pi | `pi` | `pi install git:github.com/soubarnak/Heimdall` | `/heimdall` or ask |
+| Gemini CLI | `gemini` | `gemini skills install https://github.com/soubarnak/Heimdall.git --path skills/heimdall --consent` | `/heimdall` or ask |
+| Antigravity CLI | `agy` | — | ask "use Heimdall" |
+| Qwen Code | `qwen` | — | `/heimdall` or ask |
+| Mistral Vibe | `vibe` | — | ask "use Heimdall" |
+| Grok Build | `grok` | — | ask "use Heimdall" |
+| Kimi Code CLI | `kimi` | — | ask "use Heimdall" |
+| Cursor | `cursor` | — | ask "use Heimdall" |
+| GitHub Copilot | `copilot` | — | ask "use Heimdall" |
+
+The script links the skill into `~/.agents/skills/heimdall`, which most harnesses read, plus `~/.claude/skills/heimdall` for Claude Code and `~/.qwen/skills/heimdall` for Qwen Code. `--harness all` installs every target; `--scope project --project-dir <dir>` copies the skill into one project instead; `--dry-run` shows what it would do; `--uninstall` removes it. Running the command again updates the skill.
+
+On Windows without bash, in PowerShell (copies the skill; repeat to update):
+
+```powershell
+git clone --depth 1 https://github.com/soubarnak/Heimdall.git "$HOME\.local\share\heimdall"
+foreach ($t in "$HOME\.agents\skills", "$HOME\.claude\skills") {
+  New-Item -ItemType Directory -Force $t | Out-Null
+  Remove-Item -Recurse -Force "$t\heimdall" -ErrorAction SilentlyContinue
+  Copy-Item -Recurse "$HOME\.local\share\heimdall\skills\heimdall" "$t\heimdall"
+}
 ```
 
 ## What it does
@@ -27,8 +71,6 @@ Heimdall picks one of three modes for each request and says which:
 <p align="center">
   <img src="docs/assets/build-flow.svg" width="880" alt="How Heimdall builds software. You describe the idea. Heimdall calibrates and runs intake (G0). You sign off the spec (G1) and the architecture (G2), pick a visual direction (G2.5), and confirm the ticket graph (G3). The build loop (G4 to G5) picks ready tickets, runs test-first coders in their own worktrees, opens pull requests, reviews them in a fresh context, and merges them one at a time. A QA pass (G6) follows, and you sign off the release (G7).">
 </p>
-
-An interactive version with a worked example is on the [Heimdall Build Flow](https://claude.ai/artifact/8iZoMjQJP7SSHBh7mn9J8U) page (opens for people it has been shared with).
 
 G1, G2, and G7 always need your sign-off; G6 does too in Production mode. Between gates the build loop runs on its own and reports progress in the tracker: one issue per ticket, status labels, one pull request per ticket, and the merge commit on every closed ticket.
 

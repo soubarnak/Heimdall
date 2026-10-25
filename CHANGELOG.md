@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Repository made public.
+- README opens with install instructions for agents: a harness table, one universal install command, native alternatives, and a PowerShell path for Windows.
+- INSTALL.md rewritten around the universal method; private-repository steps removed.
+- README shows the Build mode flow as an SVG diagram (`docs/assets/build-flow.svg`).
+
 ## 1.0.0 — 2026-10-25
 
 First release as an Agent Skill.

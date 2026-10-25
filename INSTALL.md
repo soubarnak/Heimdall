@@ -1,152 +1,157 @@
 # Installing Heimdall
 
-This file is written for an AI coding agent that has been given the repository URL and asked to install the Heimdall skill. Humans can follow it too.
+This file is written for an AI coding agent that has been given the repository URL and asked to install the Heimdall skill. People can follow it too.
 
-- Repository: `https://github.com/soubarnak/Heimdall` (private: you need read access)
-- Skill directory inside the repo: `skills/heimdall/` (the folder containing `SKILL.md`)
+- Repository: `https://github.com/soubarnak/Heimdall` (public; no credentials needed)
+- Skill directory inside the repository: `skills/heimdall/` (the folder that contains `SKILL.md`)
 - Skill name: `heimdall`
 
 ## Instructions for the installing agent
 
-1. **Identify your harness.** Use the table in step 3. If you cannot tell, ask the user which tool they run you in.
-2. **Check access to the private repository** before anything else (see "Private repository access"). If access fails, stop and tell the user exactly which command failed. Never ask the user to paste a token into the chat.
-3. **Install with the method for your harness.** Use the first row that matches. User scope (all projects) is the default; use project scope only if the user asks for it.
-4. **Verify** with the checks in "Verify the install".
-5. **Report to the user:** where the skill was installed, how to invoke it in their harness, and the tracker setup they still need ("Tracker setup").
+1. **Identify your harness:** the tool you are running in (Claude Code, Codex CLI, Muse Code, and so on), not the model. If you cannot tell, ask the user. If you have no shell or file tools, you are in a chat app; go to "Chat apps".
+2. **Install** with the universal method (A) and your harness's `--harness` value, or with the native method for your harness (B to G). Use user scope (all projects) unless the user asks for one project only.
+3. **Verify** with "Verify the install".
+4. **Report to the user:** where the skill was installed; that skills load when a session starts, so they must start a new session; how to invoke it; and the tracker setup if they want GitHub or Gitea issues ("Tracker setup").
 
-Do not modify the skill files during installation. Do not install Docker; Heimdall uses rootless podman when it needs containers.
+Do not modify the skill files during installation. Do not install Docker; Heimdall uses rootless podman when a project needs containers.
 
-## Private repository access
+## Harness table
 
-Every install method below fetches from GitHub with the user's own git credentials.
+| Harness | `--harness` value | Native method | Invoke with |
+|---|---|---|---|
+| Claude Code | `claude` | B. Plugin | `/heimdall` (plugin: `/heimdall:heimdall`) |
+| Codex CLI | `codex` | C. Skills CLI, D. `$skill-installer` | `$heimdall` or `/skills` |
+| Muse Code | `muse` | E. `muse skills install` | `/heimdall` |
+| OpenCode | `opencode` | C. Skills CLI | ask "use Heimdall" |
+| pi | `pi` | F. `pi install` | `/heimdall` or ask |
+| Gemini CLI | `gemini` | G. `gemini skills install` | `/heimdall` or ask |
+| Antigravity CLI | `agy` | — | ask "use Heimdall" |
+| Qwen Code | `qwen` | — | `/heimdall` or ask |
+| Mistral Vibe | `vibe` | — | ask "use Heimdall" |
+| Grok Build | `grok` | — | ask "use Heimdall" |
+| Kimi Code CLI | `kimi` | — | ask "use Heimdall" |
+| Cursor | `cursor` | C. Skills CLI | ask "use Heimdall" |
+| GitHub Copilot | `copilot` | — | ask "use Heimdall" |
+| Chat app (claude.ai, ChatGPT, Meta AI) | — | see "Chat apps" | — |
+
+Every harness also activates the skill from its description when the user says "use Heimdall" or "take this idea to shipment".
+
+## A. Universal method: clone and install script
+
+Works in every harness that can run bash (Linux, macOS, WSL, Git Bash). Running it again updates the skill.
 
 ```bash
-gh auth status                  # must show a signed-in account with access to soubarnak/Heimdall
-gh auth setup-git               # lets plain git (and installers that use it) authenticate through gh
-gh repo view soubarnak/Heimdall --json name -q .name    # prints "Heimdall" when access works
+d="$HOME/.local/share/heimdall"
+if [ -d "$d/.git" ]; then git -C "$d" pull --ff-only; else git clone --depth 1 https://github.com/soubarnak/Heimdall.git "$d"; fi
+"$d/scripts/install.sh" --harness <value from the table>
 ```
 
-If `gh` is missing or not signed in, ask the user to run `gh auth login` themselves. SSH access (`git@github.com:soubarnak/Heimdall.git`) also works for the clone-based methods.
+The script links (user scope) or copies (project scope) `skills/heimdall` into:
 
-## Install per harness
+- `~/.agents/skills/heimdall`, which Codex CLI, Muse Code, OpenCode, pi, Gemini CLI, Mistral Vibe, Grok Build, Kimi Code CLI, Cursor, and GitHub Copilot read;
+- `~/.claude/skills/heimdall` for Claude Code;
+- `~/.qwen/skills/heimdall` for Qwen Code.
 
-| Harness | Recommended method | Invoke with |
-|---|---|---|
-| Claude Code | Plugin marketplace (A) or clone and script (G) | `/heimdall:heimdall` (plugin) or `/heimdall` (skills folder) |
-| Codex CLI | Skills CLI (B), `$skill-installer` (C), or clone and script (G) | `$heimdall` or `/skills` |
-| Gemini CLI | `gemini skills install` (D) | `/heimdall` or by description |
-| Muse Code | Clone, validate, install (E) | `/heimdall` or by description |
-| pi | `pi install` (F) or clone and script (G) | `/heimdall` or by description |
-| OpenCode, Qwen Code, Mistral Vibe, Grok Build, Kimi Code CLI, Cursor, GitHub Copilot, Antigravity CLI | Skills CLI (B) or clone and script (G) | `/heimdall`, the skill picker, or by description |
-| A chat app without file tools (claude.ai, ChatGPT, Meta AI) | Not installable as a skill; see "Chat apps" | — |
+Options:
 
-Every harness also activates the skill from its description: "use Heimdall", "take this idea to shipment".
+```bash
+"$d/scripts/install.sh" --dry-run                                  # show what it would do
+"$d/scripts/install.sh"                                            # auto: harnesses found on PATH or in config folders
+"$d/scripts/install.sh" --harness all                              # every target
+"$d/scripts/install.sh" --harness claude,codex                     # several harnesses
+"$d/scripts/install.sh" --scope project --project-dir ~/code/myapp # copy into one project
+"$d/scripts/install.sh" --uninstall                                # remove what it installed
+```
 
-### A. Claude Code plugin marketplace
+It never overwrites a directory it did not create unless you pass `--force`. With no harness detected, it installs only the shared `~/.agents/skills` target and says so.
+
+### Windows without bash
+
+In PowerShell. This copies the skill; run it again to update.
+
+```powershell
+git clone --depth 1 https://github.com/soubarnak/Heimdall.git "$HOME\.local\share\heimdall"
+foreach ($t in "$HOME\.agents\skills", "$HOME\.claude\skills") {
+  New-Item -ItemType Directory -Force $t | Out-Null
+  Remove-Item -Recurse -Force "$t\heimdall" -ErrorAction SilentlyContinue
+  Copy-Item -Recurse "$HOME\.local\share\heimdall\skills\heimdall" "$t\heimdall"
+}
+```
+
+If the clone folder already exists, run `git -C "$HOME\.local\share\heimdall" pull` instead of `git clone`. Add `"$HOME\.qwen\skills"` to the list for Qwen Code.
+
+## B. Claude Code plugin
 
 This repository is its own plugin marketplace (`.claude-plugin/marketplace.json`).
 
 ```bash
-gh auth setup-git                                   # private repo: git must be able to authenticate
-claude plugin install heimdall --marketplace soubarnak/Heimdall     # one step (Claude Code 2.1.275 or later)
+claude plugin install heimdall --marketplace soubarnak/Heimdall     # Claude Code 2.1.275 or later
 ```
 
-On older versions, add the marketplace first: `claude plugin marketplace add soubarnak/Heimdall`, then `claude plugin install heimdall@heimdall`. Inside a Claude Code session the same command is `/plugin install heimdall --marketplace soubarnak/Heimdall`. Invoke the skill as `/heimdall:heimdall`. Update with `claude plugin marketplace update heimdall`, then `claude plugin update heimdall@heimdall`.
+On older versions: `claude plugin marketplace add soubarnak/Heimdall`, then `claude plugin install heimdall@heimdall`. Inside a session the command is `/plugin install heimdall --marketplace soubarnak/Heimdall`. Invoke the skill as `/heimdall:heimdall`. Update with `claude plugin marketplace update heimdall`, then `claude plugin update heimdall@heimdall`. Use either the plugin or method A for Claude Code, not both.
 
-### B. Skills CLI (`npx skills`) — most Agent Skills harnesses
+## C. Skills CLI (`npx skills`)
 
-The Skills CLI clones the repository (it tries your git credentials, then `gh repo clone`, then SSH) and links the skill into each harness's folder.
+Needs Node.js. Links the skill into the folders of the harnesses you name.
 
 ```bash
-npx skills add soubarnak/Heimdall -g                 # user scope, every detected harness
-npx skills add soubarnak/Heimdall -g -a codex        # user scope, one harness
-npx skills add soubarnak/Heimdall                    # project scope (run in the project root)
+npx skills add soubarnak/Heimdall -g -a codex          # user scope, one harness (examples: codex, claude-code, cursor, opencode, pi)
+npx skills add soubarnak/Heimdall -a codex             # project scope: run in the project root
 ```
 
 Update with `npx skills update`. Remove with `npx skills remove heimdall`.
 
-### C. Codex CLI built-in installer
+## D. Codex CLI built-in installer
 
-In a Codex session, ask the built-in installer for the skill directory:
+In a Codex session:
 
 ```
 $skill-installer install https://github.com/soubarnak/Heimdall/tree/main/skills/heimdall
 ```
 
-Restart Codex afterwards so it loads the new skill. The installer's exact argument form is not documented; if it rejects the URL, use method B or G.
+Restart Codex afterwards. The installer's exact argument form is not documented; if it rejects the URL, use method A.
 
-### D. Gemini CLI
+## E. Muse Code
 
-```bash
-gemini skills install https://github.com/soubarnak/Heimdall.git --path skills/heimdall --consent
-```
-
-Gemini CLI also reads `~/.agents/skills/`, so method G works as well. How `gemini skills install` authenticates to a private repository is not documented; if it fails, use method G.
-
-### E. Muse Code
-
-`muse skills install` takes a local path, so clone first:
+`muse skills install` takes a local path, so clone first (the first two lines of method A), then:
 
 ```bash
-git clone https://github.com/soubarnak/Heimdall.git ~/.local/share/heimdall
-muse skills validate ~/.local/share/heimdall/skills/heimdall
-muse skills install ~/.local/share/heimdall/skills/heimdall --scope user
+muse skills validate "$HOME/.local/share/heimdall/skills/heimdall"
+muse skills install "$HOME/.local/share/heimdall/skills/heimdall" --scope user
 ```
 
-Muse Code also reads `~/.agents/skills/`, so method G works as well.
-
-### F. pi
+## F. pi
 
 ```bash
 pi install git:github.com/soubarnak/Heimdall
 ```
 
-pi also reads `~/.agents/skills/`, so method G works as well.
-
-### G. Clone and install script — works for every harness
+## G. Gemini CLI
 
 ```bash
-git clone https://github.com/soubarnak/Heimdall.git ~/.local/share/heimdall
-~/.local/share/heimdall/scripts/install.sh --dry-run      # shows what it would do
-~/.local/share/heimdall/scripts/install.sh                # user scope, harnesses detected on PATH
+gemini skills install https://github.com/soubarnak/Heimdall.git --path skills/heimdall --consent
 ```
 
-The script links (user scope) or copies (project scope) `skills/heimdall` into:
+## Chat apps
 
-- `~/.agents/skills/heimdall`, which serves Codex, Muse Code, OpenCode, pi, Gemini CLI, Mistral Vibe, Grok Build, Kimi Code CLI, Cursor, and GitHub Copilot;
-- `~/.claude/skills/heimdall` for Claude Code;
-- `~/.qwen/skills/heimdall` for Qwen Code.
+Chat apps without file tools cannot install skills from a repository. Two options for the user:
 
-Useful options:
-
-```bash
-scripts/install.sh --harness all                          # every target, detected or not
-scripts/install.sh --harness claude,codex                 # only these harnesses
-scripts/install.sh --scope project --project-dir ~/code/myapp    # copy into a project
-scripts/install.sh --uninstall                            # remove what it installed
-```
-
-It never overwrites a directory it did not create unless you pass `--force`. With the default link mode, `git -C ~/.local/share/heimdall pull` updates every harness at once.
-
-### Chat apps
-
-Chat apps without file tools cannot load skills from a repository. Two options:
-
-- Upload `skills/heimdall/SKILL.md` and the files in `skills/heimdall/references/` and `skills/heimdall/assets/` as project knowledge (claude.ai Projects, ChatGPT Projects or custom GPTs, Meta AI), and use `SKILL.md` as the project instructions. Heimdall then runs in its chat profile: it runs the planning gates and hands the build loop to a coding agent.
-- Or install it in a coding agent with the methods above and keep the chat app for planning only.
+- Upload `skills/heimdall/SKILL.md` and the files in `skills/heimdall/references/` and `skills/heimdall/assets/` as project knowledge (claude.ai Projects, ChatGPT Projects or custom GPTs, Meta AI), and use the body of `SKILL.md` as the project instructions. Heimdall then runs in its chat profile: it runs the planning gates and hands the build loop to a coding agent.
+- Or install it in a coding agent with the methods above and keep the chat app for planning.
 
 ## Verify the install
 
 ```bash
-ls ~/.agents/skills/heimdall/SKILL.md ~/.claude/skills/heimdall/SKILL.md 2>/dev/null   # whichever you installed
-head -3 ~/.agents/skills/heimdall/SKILL.md                                             # shows name: heimdall
+for f in ~/.agents/skills/heimdall/SKILL.md ~/.claude/skills/heimdall/SKILL.md ~/.qwen/skills/heimdall/SKILL.md; do
+  [ -f "$f" ] && echo "$f: $(sed -n 2p "$f")"
+done
 ```
 
-Then, in the harness, start a new session and ask: "Use Heimdall. What can you do?" A working install answers with its three modes (Build, Direct, Prompt) and runs calibration first. Harness-specific checks:
+Each installed target prints `name: heimdall`. Then the user starts a new session in the harness and asks "Use Heimdall. What can you do?". A working install runs calibration and describes its three modes (Build, Direct, Prompt). Harness checks:
 
 - Claude Code: `/heimdall` (or `/heimdall:heimdall`) appears in the slash-command menu.
 - Codex CLI: `/skills` lists `heimdall`.
-- Muse Code: `muse skills validate <path>` prints that the skill is valid.
+- Muse Code: `muse skills validate <path>` reports the skill as valid.
 
 From a clone you can also run the repository's own checks: `scripts/validate.sh`.
 
@@ -158,20 +163,20 @@ Heimdall tracks progress as issues on GitHub, on Gitea, or as local files. The u
 - **Gitea:** the `tea` CLI (commands verified with tea 0.16.0 against Gitea 1.27.1), signed in with `tea login add`. Native blocking edges need issue dependencies enabled for the repository; otherwise Heimdall falls back to a `Blocked by` section in the issue body.
 - **Local:** nothing to install. Tickets live in `.heimdall/tickets/`.
 
-Other prerequisites for Build mode: git 2.38 or later (for `git merge-tree --write-tree`), and the test tooling of the project's stack. Podman (rootless) if the project needs containers.
+Other prerequisites for Build mode: git 2.38 or later (for `git merge-tree --write-tree`), the test tooling of the project's stack, and rootless podman if the project needs containers.
 
 ## Update and uninstall
 
 | Method | Update | Uninstall |
 |---|---|---|
-| A. Claude plugin | `claude plugin marketplace update heimdall`, then `claude plugin update heimdall@heimdall` | `claude plugin uninstall heimdall@heimdall` |
-| B. Skills CLI | `npx skills update` | `npx skills remove heimdall` |
-| C, D, E, F | re-run the install command | the harness's skill-removal command, or delete the skill folder |
-| G. Clone and script | `git -C ~/.local/share/heimdall pull` (link mode) | `scripts/install.sh --uninstall` |
+| A. Clone and script | run the method A commands again | `"$HOME/.local/share/heimdall/scripts/install.sh" --uninstall` |
+| B. Claude plugin | `claude plugin marketplace update heimdall`, then `claude plugin update heimdall@heimdall` | `claude plugin uninstall heimdall@heimdall` |
+| C. Skills CLI | `npx skills update` | `npx skills remove heimdall` |
+| D, E, F, G | run the install command again | the harness's skill-removal command, or delete the skill folder |
 
 ## Troubleshooting
 
-- **"Repository not found" or 404:** the account lacks access to the private repository, or git is not using the `gh` credentials. Run `gh auth status` and `gh auth setup-git`.
-- **The skill does not appear:** restart the harness; check the folder for your harness in the table above; check that the project folder is trusted (Muse Code, pi, Gemini CLI, Mistral Vibe load project skills only in trusted folders).
+- **The skill does not appear:** start a new session; check the folder for your harness above; for project scope, check that the folder is trusted (Muse Code, pi, Gemini CLI, and Mistral Vibe load project skills only in trusted folders).
+- **The skill is listed twice:** some harnesses read several folders (Muse Code, OpenCode, and Cursor also read `~/.claude/skills`). Both entries are the same skill.
+- **`git pull --ff-only` fails:** the clone was edited locally. Delete `~/.local/share/heimdall` and run method A again.
 - **Claude Code ignores `AGENTS.md`:** Claude Code reads `CLAUDE.md`. Heimdall writes a `CLAUDE.md` containing `@AGENTS.md` in projects it builds.
-- **Two copies conflict:** some harnesses read several folders (Muse Code and Cursor also read `~/.claude/skills`). Both copies are the same skill; if they diverge, reinstall with one method.
