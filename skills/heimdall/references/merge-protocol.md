@@ -72,18 +72,18 @@ Exactly one merge runs at a time. For each approved ticket, in approval order:
    git merge-tree --write-tree --name-only --no-messages <integration-branch> heimdall/t<nn>-<slug>
    # exit 0 = clean; exit 1 = conflicts (the conflicted paths are listed after the tree id)
    ```
-3. **Update and test.** If the integration tip moved since the coder's sync, merge it into the ticket branch in the ticket's worktree (`git -C <worktree> merge --no-edit <integration-branch>`; run the Install command if a lockfile changed) and run the full suite there. Clean and green → on merge path `pr`, push the branch (`git -C <worktree> push origin heimdall/t<nn>-<slug>`; the standing authorization covers it) and record the new head as the guarded head in STATE.md; no re-review, because the merge added only commits that were already reviewed. A merge that needed hand-resolved hunks is a conflict (L7). Red → semantic conflict (L7).
+3. **Update and test.** If the integration tip moved since the coder's sync, merge it into the ticket branch in the ticket's worktree (`git -C <worktree> merge --no-edit <integration-branch>`; run the Install command if a lockfile changed) and run the full suite there. A merge that reports conflicts: `git -C <worktree> merge --abort`, then dispatch the merger (L7; its report lands in `.heimdall/reports/T<nn>-merge.md`). Clean (or `MERGED-READY` from the merger) and green → on merge path `pr`, push the branch (`git -C <worktree> push origin heimdall/t<nn>-<slug>`; the standing authorization covers it) and record the new head as the guarded head in STATE.md; no re-review, because the merge added only commits that were already reviewed, regenerated files, or kept-both adjacent lines. Red after a clean merge → undo it (`git -C <worktree> reset --hard ORIG_HEAD`; the merge commit was never pushed) and treat it as a semantic conflict (L7).
 4. **Merge** with the tracker's operation (squash, one commit per ticket, guarded by the recorded head) or, on the local merge path:
    ```bash
    git switch <integration-branch> && git merge --squash heimdall/t<nn>-<slug> && git commit -m "<ticket title> (T<nn>)"
    ```
 5. **Record the merge SHA.** Merges are serial, so the integration tip right after the merge is the squash commit: remote, `git fetch origin && git merge --ff-only origin/<integration-branch>` in the main checkout, then `git rev-parse HEAD` (GitHub cross-check: `gh pr view <pr#> --json mergeCommit --jq .mergeCommit.oid`); local path, `git rev-parse HEAD`.
-6. **Verify the integration tip** in the main checkout (CI, or the full suite). Red after a merge stops all new dispatches until it is green again (fix-forward ticket, or `git revert -m 1 <sha>` / `git revert <sha>` — a new commit, never a reset).
-7. **Close and clean up:** close the ticket with the merge SHA (tracker file), then, in this order:
+6. **Verify the integration tip** in the main checkout: CI when the repository has it — the combined status of the tip commit, `gh api repos/{owner}/{repo}/commits/<merge-sha>/status --jq .state` or `tea api '/repos/{owner}/{repo}/commits/<merge-sha>/status' | jq -r .state`, polled until it is not `pending` — otherwise the full suite in the main checkout (run the Install command first if the merge changed a lockfile). Red after a merge stops all new dispatches until it is green again: either a fix-forward `bug` ticket scheduled first, or `git revert <sha>` (a new commit, never a reset), after which the ticket goes approved → changes-requested with a fix round that addresses the failing output; its branch and worktree still exist because step 7 has not run (execution-loop.md, section 8).
+7. **Close and clean up** (green tip only): close the ticket with the merge SHA (tracker file), then, in this order:
    ```bash
    git worktree remove <worktree-root>/t<nn>-<slug>
    git branch -D heimdall/t<nn>-<slug>        # -D: git cannot see squashed history as merged
-   git push origin --delete heimdall/t<nn>-<slug>   # remote trackers; covered by the standing authorization
+   git push origin --delete heimdall/t<nn>-<slug>   # remote trackers; ignore "remote ref does not exist" (the host already deleted it)
    git worktree prune
    ```
    Never use `gh pr merge --delete-branch` or `tea pulls clean`: both delete the local branch while the worktree still holds it.
@@ -94,8 +94,8 @@ Exactly one merge runs at a time. For each approved ticket, in approval order:
 | Conflict | Example | Who resolves | How |
 |---|---|---|---|
 | Mechanical | lockfile, generated client, snapshot, fragment ordering | merger | regenerate with the project's tool (`npm install`, `uv lock`, codegen), never hand-edit; run the full suite; note it in the PR |
-| Trivial adjacency | two imports added on neighbouring lines | merger | keep both; run the full suite; the merge commit goes to a one-commit re-review (`git show --cc <merge-sha>`) |
-| Semantic | both sides change the same logic; suite red after a clean merge | the coder | abort (`git merge --abort`), set the ticket to changes-requested with the conflicting ticket and the failing output; the coder re-syncs and fixes in its worktree |
+| Trivial adjacency | two imports added on neighbouring lines | merger | keep both; run the full suite; no re-review (no logic was written) — the merge report lists the kept hunks |
+| Semantic | both sides change the same logic; suite red after a clean merge | the coder | undo the merge (`git merge --abort` when conflicted, else `git reset --hard ORIG_HEAD` on the ticket branch), save the failing output as `.heimdall/reports/T<nn>-merge.md`, set the ticket approved → changes-requested; the fix round re-syncs and fixes in its worktree (execution-loop.md, section 8) |
 | Design | the two tickets disagree about a public interface | orchestrator | stop both; revision loop to G3 (or G2 if the module map was wrong) |
 
 Every conflict is a signal that L1–L3 missed something. Record it in STATE.md Health and fix the cause (add a hotspot, a discovery registry, or a missing blocking edge) before dispatching the next wave.

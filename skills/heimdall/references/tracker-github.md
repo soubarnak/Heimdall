@@ -41,8 +41,11 @@ gh issue comment <spec#> --body-file .heimdall/PROGRESS.md
 Create tickets in dependency order (blockers first) so edges can reference real numbers:
 
 ```bash
+# the issue body: the draft without its H1 and its local status lines; "Part of #<spec>" is then the first line
+sed -e '1{/^# /d}' -e '/^Status:/d' -e '/^Claimed by:/d' -e '/^Merged:/d' .heimdall/tickets/T<nn>-<slug>.md \
+  | sed -e '1{/^$/d}' > .heimdall/tickets/T<nn>-<slug>.body.md
 gh issue create --title "<ticket title>" --label heimdall:ready [--label heimdall:prefactor] \
-  --milestone "<milestone title>" --parent <spec#> --body-file .heimdall/tickets/T<nn>-<slug>.md
+  --milestone "<milestone title>" --parent <spec#> --body-file .heimdall/tickets/T<nn>-<slug>.body.md
 ```
 
 `--parent` makes it a sub-issue of the spec. If sub-issues are unavailable, put `Part of #<spec>` on the first line of the body.
@@ -76,7 +79,7 @@ gh issue edit <n> --remove-label heimdall:ready --add-label heimdall:in-progress
 gh issue comment <n> --body "Claimed by <role>-<agent-id> on branch heimdall/t<nn>-<slug>."
 ```
 
-Every other transition in execution-loop.md, section 2, uses the same shape: `gh issue edit <n> --remove-label heimdall:<from> --add-label heimdall:<to>`. A widened touch set is written back with `gh issue edit <n> --body-file .heimdall/tickets/T<nn>-<slug>.md`.
+Every other transition in execution-loop.md, section 2, uses the same shape: `gh issue edit <n> --remove-label heimdall:<from> --add-label heimdall:<to>`. A widened touch set is written back by rebuilding the body file (the `sed` line under Tickets) and `gh issue edit <n> --body-file .heimdall/tickets/T<nn>-<slug>.body.md`.
 
 ## Pull requests
 
@@ -115,6 +118,10 @@ gh issue close <n> --comment "Merged in <merge-sha> via #<pr#>."
 - No `--delete-branch`: it also deletes the local branch, which fails while the ticket's worktree holds it. Delete after the worktree is removed, with `git push origin --delete heimdall/t<nn>-<slug>` (merge-protocol.md, L6, step 7).
 - Closing keywords (`Closes #n`) close issues only when the PR merges into the **default branch**. The merger therefore always closes the ticket explicitly; keywords are a bonus.
 - Use `gh pr merge --auto` only when the repo has required checks configured; otherwise the merger runs the suite itself (merge-protocol.md).
+
+## Merge path `local` with this tracker
+
+No PR exists. Verdicts: `gh issue comment <n> --body-file .heimdall/reports/T<nn>-review-<round>.md` plus the label change. Merge: the local squash (merge-protocol.md, L6). Close: `gh issue close <n> --comment "Merged locally in <merge-sha>; pushed at the next approved checkpoint."` The SHA is unpushed until that checkpoint.
 
 ## Read
 

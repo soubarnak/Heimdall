@@ -73,16 +73,20 @@ The reviewer audits:
 
 1. `git log --reverse --format='%h %s' <base>..<head>`: test commits precede or accompany the behavior they cover.
 2. Every new test sits at a seam listed in the ticket.
-3. **Red-at-base check** (mandatory in Production and on High-risk tickets; one spot-check in MVP; skipped in Prototype): run the ticket's new tests against the base code. They must fail.
+3. **Red-at-base check** (mandatory in Production and on High-risk tickets; one spot-check in MVP; skipped in Prototype): run the ticket's new tests against the base code. They must fail. The orchestrator writes this script as `.heimdall/packets/T<nn>-red-at-base.sh` with every placeholder filled, and the review packet points at it; the reviewer runs it with `bash <absolute path>` (one allow-listed command, so no shell grant for loops or `mkdir` is needed):
    ```bash
-   git worktree add --detach <scratch> <base-sha>
-   (cd <scratch> && <Install command from HANDOFF>)            # the scratch tree has no installed dependencies
-   git -C <worktree> diff --name-only --diff-filter=AM <base-sha> <head-sha> -- <test paths> | while read -r f; do
-     mkdir -p "<scratch>/$(dirname "$f")" && git -C <worktree> show <head-sha>:"$f" > "<scratch>/$f"
+   #!/usr/bin/env bash
+   set -eu
+   W=<worktree>; S=<worktree-root>/scratch-t<nn>; BASE=<base-sha>; HEAD=<head-sha>
+   git -C "$W" worktree add --detach "$S" "$BASE"
+   trap 'git -C "$W" worktree remove --force "$S"' EXIT
+   (cd "$S" && <Install command from HANDOFF>)                  # the scratch tree has no installed dependencies
+   git -C "$W" diff --name-only --diff-filter=AM "$BASE" "$HEAD" -- <test path globs from the touch set> | while read -r f; do
+     mkdir -p "$S/$(dirname "$f")" && git -C "$W" show "$HEAD:$f" > "$S/$f"
    done
-   # run only those test files in <scratch>; expect failures; then: git worktree remove --force <scratch>
+   (cd "$S" && <one-test-file command from HANDOFF> <the same files>) || echo "RED-AT-BASE: tests failed on the base code, as expected"
    ```
-   `<base-sha>` is the report's `Synced with` SHA. A test that fails in the scratch tree because of a missing dependency or a renamed module, not a missing behavior, is a setup error, not a red: install or mirror the dependency and run again.
+   `<base-sha>` is the report's `Synced with` SHA; `<test path globs>` are the test paths of the ticket's touch set. A test that fails in the scratch tree because of a missing dependency or a renamed module, not a missing behavior, is a setup error, not a red: fix the script's Install step and run again.
    A new test that passes on the base code tests nothing new.
 
 ## 7. Bugs

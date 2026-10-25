@@ -21,7 +21,8 @@ You are the reviewer for one ticket in a multi-agent build. You did not write th
 - Design (UI tickets): HANDOFF Design Contract; prototype screen <absolute path, or "n/a">; the coder's screenshot <path from the report, or "none">
 - Previous review (round 2+): <absolute path, or "none">
 - Diff: `git -C <worktree> diff <base sha>...<head sha>` (the base is the integration tip the coder last merged, so this is only the ticket's change)
-- Commits: `git -C <worktree> log --reverse --no-merges --format='%h %s' <base sha>..<head sha>`   Round 2+: the fix commits are `git -C <worktree> log --reverse --no-merges --format='%h %s' <last reviewed>..<head sha>`; check the open findings first, then the rest of the diff for regressions
+- Commits: `git -C <worktree> log --reverse --no-merges --format='%h %s' <base sha>..<head sha>`   Round 2+: the fix commits are `git -C <worktree> log --reverse --first-parent --no-merges --format='%h %s' <last reviewed>..<head sha>`; check the open findings first, then the rest of the diff for regressions
+- Red-at-base script (when the check is required or spot-checked): `bash <absolute path to .heimdall/packets/T<nn>-red-at-base.sh>` — written by the orchestrator (references/tdd-protocol.md, section 6); it prints the test results from the base code and removes its scratch worktree
 - Touch set: <module: path globs; tests: path globs; hotspots>
 </context>
 
@@ -30,7 +31,7 @@ You are the reviewer for one ticket in a multi-agent build. You did not write th
 2. Run the full suite and the type checker with the HANDOFF commands. Record the results.
 3. **Spec:** requirements missing or partial; behavior nobody asked for; requirements that look implemented but are wrong. Quote the ticket or spec line for each. UI tickets: compare the coder's screenshot (or the running screen) with the prototype screen; a difference in layout, flow, copy, or states is a Spec finding.
 4. **Standards:** violations of documented repo standards (cite file and rule). Then the smell baseline — Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest — each labelled "possible <smell>" with the hunk quoted. A documented repo standard overrides the baseline. Skip anything tooling enforces.
-5. **TDD audit:** test commits precede or accompany the behavior they cover; every new test sits at a seam listed in the ticket; no implementation-coupled, tautological, or horizontally sliced tests; the report's red column is plausible. Red-at-base check when required: copy the new test files onto a scratch worktree at `<base sha>`, run them, and expect failures; then remove the scratch worktree.
+5. **TDD audit:** test commits precede or accompany the behavior they cover; every new test sits at a seam listed in the ticket; no implementation-coupled, tautological, or horizontally sliced tests; the report's red column is plausible. Red-at-base check when required: run the red-at-base script from the context block and expect failures.
 6. **Security:** secrets in code or history, missing input validation at trust boundaries, injection, missing authentication or authorization checks, risky dependencies.
 7. **Scope:** `git -C <worktree> diff --name-only <base sha>...<head sha>` lists only touch-set paths and their tests.
 8. **Verdict:** APPROVE only if no blocking finding remains. Blocking: any Spec, Security, or Scope finding; hard Standards violations; TDD anti-patterns or missing red-first evidence (MVP and Production). Smells are judgement calls and non-blocking unless they make the change wrong or unmaintainable.

@@ -5,7 +5,8 @@ Worktree: <absolute path>   Branch: heimdall/t<nn>-<slug> @ <approved sha>   Int
 Pre-check conflicts: <paths reported by git merge-tree, or "none — update and test only">
 
 <!-- Orchestrator: dispatch only when references/merge-protocol.md, L6 step 2 or 3 needs resolution.
-     Save as .heimdall/packets/T<nn>-merge.md. One merge at a time. -->
+     Save as .heimdall/packets/T<nn>-merge.md; the report goes to .heimdall/reports/T<nn>-merge.md. One merge at a time.
+     A headless merger gets the same shell grants and working directory as a coder (references/harness-adapters.md). -->
 
 ## Prompt
 
@@ -34,7 +35,7 @@ MERGE: <MERGED-READY | SEMANTIC-CONFLICT>
 MERGE REPORT — T<nn> <ticket title>
 Head: <new sha, or unchanged sha>   Integration tip merged: <sha>
 Resolved: <path — mechanical (regenerated with <command>) | trivial adjacency (kept both)>, or "none"
-Hand-edited lines needing a one-commit re-review: <yes — git show --cc <sha> | no>
+Kept-both hunks (trivial adjacency): <path:lines, or "none">   Hand-edited logic: none (anything else is SEMANTIC-CONFLICT)
 Checks: full suite <command> → <result>; type-check → <result>
 Conflict (if any): <conflicting ticket or commit — the failing test or the conflicting hunk — suggested owner>
 </report_format>

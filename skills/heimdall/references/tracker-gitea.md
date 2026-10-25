@@ -43,11 +43,12 @@ tea comment <spec#> "$(cat .heimdall/PROGRESS.md)"
 Create in dependency order (blockers first):
 
 ```bash
+# the issue body: the draft without its H1 and its local status lines; "Part of #<spec>" is then the first line
+sed -e '1{/^# /d}' -e '/^Status:/d' -e '/^Claimed by:/d' -e '/^Merged:/d' .heimdall/tickets/T<nn>-<slug>.md \
+  | sed -e '1{/^$/d}' > .heimdall/tickets/T<nn>-<slug>.body.md
 tea issues create --title "<ticket title>" --labels heimdall:ready \
-  --milestone "<milestone title>" --description-file .heimdall/tickets/T<nn>-<slug>.md
+  --milestone "<milestone title>" --description-file .heimdall/tickets/T<nn>-<slug>.body.md
 ```
-
-The first line of every ticket body is `Part of #<spec>`.
 
 ## Blocking edges
 
@@ -74,7 +75,7 @@ tea issues edit <n> --remove-labels heimdall:ready --add-labels heimdall:in-prog
 tea comment <n> "Claimed by <role>-<agent-id> on branch heimdall/t<nn>-<slug>."
 ```
 
-Every other transition in execution-loop.md, section 2, uses the same shape: `tea issues edit <n> --remove-labels heimdall:<from> --add-labels heimdall:<to>`. A widened touch set is written back with `tea issues edit <n> --description-file .heimdall/tickets/T<nn>-<slug>.md`.
+Every other transition in execution-loop.md, section 2, uses the same shape: `tea issues edit <n> --remove-labels heimdall:<from> --add-labels heimdall:<to>`. A widened touch set is written back by rebuilding the body file (the `sed` line under Tickets) and `tea issues edit <n> --description-file .heimdall/tickets/T<nn>-<slug>.body.md`.
 
 ## Pull requests
 
@@ -114,6 +115,10 @@ tea issues close <n>
 - Closing keywords (`close`, `closes`, `fix`, `fixes`, `resolve`, …) in a PR description close issues on merge only when the merger has permission. The merger always closes the ticket explicitly anyway.
 - `tea pulls merge` has no head-SHA guard: the `test` line reads `head.sha` immediately before merging and aborts if it differs from the guarded head (merge-protocol.md, L6).
 - Do not use `tea pulls clean`: it deletes the local branch while the ticket's worktree holds it. Delete after the worktree is removed, with `git push origin --delete heimdall/t<nn>-<slug>` (merge-protocol.md, L6, step 7).
+
+## Merge path `local` with this tracker
+
+No PR exists. Verdicts: `tea comment <n> "$(cat .heimdall/reports/T<nn>-review-<round>.md)"` plus the label change. Merge: the local squash (merge-protocol.md, L6). Close: `tea comment <n> "Merged locally in <merge-sha>; pushed at the next approved checkpoint."`, then `tea issues close <n>`. The SHA is unpushed until that checkpoint.
 
 ## Read
 

@@ -1,7 +1,7 @@
 <!-- Heimdall ticket template (references/execution-loop.md, G3).
-     Remote trackers: the title becomes the issue title; this body becomes the issue body with `Part of #<spec>` as
-     its first line; status lives in labels, so drop only the Status, Claimed by, and Merged lines (keep Kind,
-     Covers, Screen, Blocked by, Branch). Local tracker: keep everything (references/tracker-local.md).
+     Remote trackers: the title becomes the issue title; the issue body is built from this file by the tracker file's
+     `sed` line (drop the H1 and the Status, Claimed by, and Merged lines, so `Part of #<spec>` is the first line);
+     the spec issue exists before any ticket is published. Local tracker: keep everything (references/tracker-local.md).
      No file paths (they live in HANDOFF.md's module map) and no code, except a decision-rich prototype snippet. -->
 
 # T<nn>: <ticket title>
