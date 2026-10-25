@@ -74,15 +74,19 @@ tea issues edit <n> --remove-labels heimdall:ready --add-labels heimdall:in-prog
 tea comment <n> "Claimed by <role>-<agent-id> on branch heimdall/t<nn>-<slug>."
 ```
 
+Every other transition in execution-loop.md, section 2, uses the same shape: `tea issues edit <n> --remove-labels heimdall:<from> --add-labels heimdall:<to>`. A widened touch set is written back with `tea issues edit <n> --description-file .heimdall/tickets/T<nn>-<slug>.md`.
+
 ## Pull requests
+
+Round 1, after `git push -u origin heimdall/t<nn>-<slug>`:
 
 ```bash
 tea pulls create --base <integration-branch> --head heimdall/t<nn>-<slug> \
-  --title "<ticket title> (#<n>)" --description-file .heimdall/reports/T<nn>-pr.md [--draft]
+  --title "<ticket title> (#<n>)" --description-file .heimdall/reports/T<nn>-pr.md
 tea api '/repos/{owner}/{repo}/pulls/<pr#>' | jq '{mergeable, head: .head.sha, state}'
 ```
 
-`--draft` prefixes `WIP:`; remove the prefix with `tea pulls edit` when the coder finishes.
+Round 2 and later: `git push origin heimdall/t<nn>-<slug>` only; the open PR follows the branch. The integration branch itself must already be on `origin` (execution-loop.md, section 3).
 
 ## Review verdicts
 
@@ -98,16 +102,18 @@ Use `tea pulls approve <pr#>` / `tea pulls reject <pr#>` only when the reviewer 
 ## Merge and close
 
 ```bash
-# confirm the head SHA still equals the reviewed SHA, then:
+test "$(tea api '/repos/{owner}/{repo}/pulls/<pr#>' | jq -r .head.sha)" = "<guarded-head-sha>" || exit 1   # SHA guard
 tea pulls merge <pr#> --style squash --title "<ticket title> (#<n>)" --message "Ticket #<n>"
+git fetch origin && git merge --ff-only origin/<integration-branch>     # in the main checkout
+MERGE_SHA=$(git rev-parse HEAD)                                         # serial merges: the tip is the squash commit
 tea comment <n> "Merged in <merge-sha> via !<pr#>."
 tea issues close <n>
 ```
 
 - Merge styles: `merge`, `rebase`, `squash`, `rebase-merge` (Heimdall default: `squash`, one commit per ticket).
 - Closing keywords (`close`, `closes`, `fix`, `fixes`, `resolve`, …) in a PR description close issues on merge only when the merger has permission. The merger always closes the ticket explicitly anyway.
-- `tea pulls merge` has no head-SHA guard: read `head.sha` immediately before merging and abort if it differs from the reviewed SHA.
-- After merge: `tea pulls clean <pr#>` deletes the local and remote feature branch.
+- `tea pulls merge` has no head-SHA guard: the `test` line reads `head.sha` immediately before merging and aborts if it differs from the guarded head (merge-protocol.md, L6).
+- Do not use `tea pulls clean`: it deletes the local branch while the ticket's worktree holds it. Delete after the worktree is removed, with `git push origin --delete heimdall/t<nn>-<slug>` (merge-protocol.md, L6, step 7).
 
 ## Read
 

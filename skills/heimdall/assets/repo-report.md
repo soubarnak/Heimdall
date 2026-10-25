@@ -1,3 +1,4 @@
+RESEARCH: DONE
 REPO REPORT — <project-slug> — <YYYY-MM-DD>
 Stack: <languages, frameworks, key libraries with versions>
 Structure: <top-level layout in 3–5 lines>

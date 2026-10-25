@@ -3,7 +3,7 @@ name: heimdall
 description: Idea-to-shipment orchestration for building software with coordinated AI agents. Takes a vague idea or a complete SRS, researches what the user does not know, locks a spec and architecture through decision gates, breaks the work into a ticket graph on GitHub issues, Gitea issues, or local files, then runs parallel test-first coder agents (one git worktree per ticket), fresh-context reviewer agents, and a serial merger so work lands without merge conflicts, through QA to release. Harness- and model-agnostic (Claude Code, Codex CLI, Muse Code, OpenCode, pi, Gemini and Antigravity CLI, Qwen Code, Vibe, Grok Build, Kimi, Cursor, Copilot; Claude, GPT, Muse, DeepSeek, Qwen, Gemini, Mistral, Grok, Kimi, GLM, MiniMax). Also writes optimized prompts and model recommendations. Use when the user wants an app or feature built from an idea or SRS, says "use Heimdall" or "take this idea to shipment", or wants a prompt optimized for a specific model.
 compatibility: Agent profile needs a shell and git 2.38 or later. GitHub tracking needs gh; Gitea tracking needs tea; parallel agents need subagents or a headless agent CLI. Chat apps without tools run the planning gates and hand the build loop to a coding agent.
 metadata:
-  version: "1.1.1"
+  version: "1.2.0"
   author: soubarnak
   repository: https://github.com/soubarnak/Heimdall
 ---
@@ -35,7 +35,7 @@ idea or SRS
   G1 *  spec locked + briefing                                                      intake.md, assets/spec.md
   G2 *  architecture (ADRs), module map, seams, tracker, topology, authorization    project-research.md, merge-protocol.md
   G2.5  visual direction: mockups, your pick, a prototype (UI builds)               production-orchestrator.md
-  G3    ticket graph -> tracker; bootstrap commit (ADRs, AGENTS.md)                 production-orchestrator.md, tracker-*.md
+  G3    ticket graph + coverage -> tracker; bootstrap commit (ADRs, AGENTS.md)      production-orchestrator.md, tracker-*.md
   G4-5  build loop: frontier -> coder (worktree, TDD) -> PR -> reviewer -> serial merge -> close
                                                                                     execution-loop.md, agent-roles.md, tdd-protocol.md
   G6    QA: whole-build review, QA agent, fixes as tickets
@@ -85,7 +85,7 @@ A visual progress report (`.heimdall/PROGRESS.md` and `progress.html`) shows wha
 | references/prompting-grok.md | xAI Grok | packets for Grok models |
 | references/prompting-kimi-glm-minimax.md | Moonshot Kimi, Zhipu GLM, MiniMax | packets for those models |
 
-Asset templates (fill, never improvise the shape): assets/spec.md, assets/handoff.md, assets/state.md, assets/decisions.md, assets/briefing.md, assets/research-digest.md, assets/adr.md, assets/repo-report.md, assets/setup-packet.md, assets/session-plan.md, assets/ticket.md, assets/coder-packet.md, assets/return-report.md, assets/review-packet.md, assets/review-report.md, assets/merge-packet.md, assets/pr-body.md, assets/progress-report.md, assets/progress-report.html.
+Asset templates (fill, never improvise the shape): assets/spec.md, assets/handoff.md, assets/state.md, assets/decisions.md, assets/briefing.md, assets/research-digest.md, assets/adr.md, assets/repo-report.md, assets/setup-packet.md, assets/session-plan.md, assets/ticket.md, assets/coder-packet.md, assets/return-report.md, assets/review-packet.md, assets/review-report.md, assets/merge-packet.md, assets/pr-body.md, assets/progress-report.md, assets/progress-report.html, assets/qa-packet.md, assets/research-packet.md, assets/kickoff.md, assets/agents-md.md.
 
 **Missing-file guard:** if a file above is missing, say exactly which one and how your output is degraded. Never improvise its contents. When files are added or renamed, update this index in the same change.
 

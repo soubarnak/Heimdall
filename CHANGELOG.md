@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0 — 2026-10-26
+
+Audit release: a fresh-context review of the build loop and a live G0–G3 dry run found gaps that stopped a ticket from completing on GitHub or Gitea, and several places where the orchestrator had to invent a command, a path, or a rule. All are closed.
+
+- Build loop: the integration branch is pushed after the bootstrap commit (merge path `pr`); every coder round pushes the ticket branch (round 1 also opens the PR); the review base is the report's `Synced with` SHA and is validated with `git merge-base`; the merger records a guarded head (approved, or the update-merge head) and matches on it; the merge SHA comes from the integration tip after the merge; branches are deleted after the worktree, never with `--delete-branch` or `tea pulls clean`; `STATUS: FAILED` and `VERDICT: STALE` have routes; one status-transition table; slug and round defined; lock release and the cap defined; worktrees are reused on retries and resumes; `.heimdall/packets/` is created at setup; touch-set violations go back as a fix round; widened touch sets are written to the issue body; draft PRs removed.
+- Headless dispatch: every adapter states the working directory and how the report is captured; Claude Code coders get an `--allowedTools` grant (`acceptEdits` alone denies shell commands in `-p` mode — verified); Codex coders get `sandbox_workspace_write.writable_roots` for the main checkout's `.git`.
+- TDD: the red-at-base check installs dependencies in the scratch tree and skips deleted files.
+- Gates: a mandatory gate locks only on a sign-off given after its artifacts were shown; blanket instructions do not pre-authorize it, and there is no "provisional" lock. The bootstrap commit happens only after the G3 confirmation.
+- Templates: HANDOFF gains a hotspot-to-paths table and a Coverage table (user story → tickets), the single source for G3 validation and the progress report; tickets gain `Covers:` and `Screen:`; coder and review packets carry the prototype screen; STATE.md tracks the guarded head and retries. New templates: `qa-packet.md` (G6 whole-build review and QA run), `research-packet.md` (researcher and scout), `kickoff.md` (chat to coding-agent handoff), `agents-md.md` (the bootstrap AGENTS.md).
+- Grading: accepting a recommendation after seeing the options is an informed decision (A-eligible); "you pick" without options is delegation (C cap); "Just proceed" turns open preference questions into listed assumptions.
+
 ## 1.1.1 — 2026-10-26
 
 - Every question Heimdall asks the user now carries exactly one recommended answer, listed first and marked "(Recommended)" with a one-line reason. The rule lives in workflow-stages.md, Stage 6, and covers interviews, the calibration question, gate questions, the G2.5 design pick, the G3 confirmation, change requests, and batched `needs-human` items. Advisor decision blocks end with a per-decision recommendation.

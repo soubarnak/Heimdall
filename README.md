@@ -136,6 +136,8 @@ Heimdall first calibrates: it detects the harness, the model, and the tools avai
 | G6 QA | a whole-build review and QA findings as new tickets | confirm (sign off in Production) |
 | G7 Ship | the release steps and an operations handover briefing | **sign off**, and approve each deploy, tag, publish, or merge to your default branch |
 
+A sign-off counts only when you give it after seeing the gate's artifacts. "Just build it" or "run all the gates" does not lock G1, G2, or G7: Heimdall stops there, shows the briefing with its recommended answers, and waits.
+
 ### Watching progress
 
 - **Tracker:** one issue per ticket under a spec issue. Labels move from `heimdall:ready` to `heimdall:in-progress`, `heimdall:in-review`, and `heimdall:approved` or `heimdall:changes-requested`; a closed ticket carries its merge commit, and `heimdall:needs-human` marks a ticket waiting on you. Each ticket has one pull request with the coder's test-first evidence and the reviewer's verdict.
@@ -164,7 +166,7 @@ Heimdall first calibrates: it detects the harness, the model, and the tools avai
 
 ### What Heimdall does without asking
 
-At G2 you approve a standing authorization. With it, the build loop creates and labels issues, milestones, and comments; pushes `heimdall/*` branches; opens pull requests; merges approved pull requests into the integration branch; closes tickets; and reverts a breaking merge with a new commit.
+At G2 you approve a standing authorization. With it, the build loop creates and labels issues, milestones, and comments; pushes `heimdall/*` branches and deletes them once merged; pushes the integration branch (the bootstrap commit and each merge); opens pull requests; merges approved pull requests into the integration branch; closes tickets; and reverts a breaking merge with a new commit.
 
 Everything else waits for your explicit go-ahead, every time: force-pushes, deleting data or non-Heimdall branches, migrations without a backup, merging or pushing to the default branch when it is not the integration branch, deploying, tagging, publishing, changing repository settings, spending money, and sending messages. If you want to approve every push, say so: Heimdall then merges locally and pushes only at checkpoints you approve.
 
@@ -193,7 +195,7 @@ AGENTS.md (+ CLAUDE.md)   committed: commands, module map, and conventions for e
 
 ### Chat apps
 
-In a chat app without file tools (claude.ai, ChatGPT, Meta AI), Heimdall runs G0–G3 in the chat and prints every artifact in full. It starts with a Session Plan, and each chat ends with the updated STATE.md and an instruction to paste it into a fresh chat. After G3 it gives you a kickoff message that hands the build loop to a coding agent with Heimdall installed. Progress reports appear as Markdown, or as an artifact where the app supports artifacts.
+In a chat app without file tools (claude.ai, ChatGPT, Meta AI), Heimdall runs G0–G3 in the chat and prints every artifact in full. It starts with a Session Plan, and each chat ends with the updated STATE.md and an instruction to paste it into a fresh chat. After G3 it gives you a kickoff message that hands the build loop to a coding agent with Heimdall installed: which files to save where, the install command, and the first message to send. Progress reports appear as Markdown, or as an artifact where the app supports artifacts.
 
 ## Repository layout
 
@@ -201,7 +203,7 @@ In a chat app without file tools (claude.ai, ChatGPT, Meta AI), Heimdall runs G0
 skills/heimdall/            the skill (copy or link this folder into a harness)
   SKILL.md                  entry point: calibration, routing, Build mode overview, global rules
   references/               protocols loaded on demand (27 files)
-  assets/                   templates for specs, tickets, packets, reports, ADRs, briefings, state, progress report (19 files)
+  assets/                   templates for specs, tickets, packets, reports, ADRs, briefings, state, progress report, QA, research, kickoff, AGENTS.md (23 files)
 scripts/install.sh          installs the skill into every detected harness
 scripts/validate.sh         checks the skill format, index coverage, manifests, and secrets
 .claude-plugin/             Claude Code plugin and marketplace manifests

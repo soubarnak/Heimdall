@@ -1,7 +1,7 @@
 # PROGRESS — <project-slug> — <YYYY-MM-DD> — <phase, e.g. "G3 locked" or "build loop, wave 2 of 4">
 
 <!-- The visual progress report (references/production-orchestrator.md, section 6). Regenerate it from STATE.md,
-     HANDOFF.md, the spec's US → T table, and the tracker; never hand-edit it. The tracker wins on ticket status.
+     HANDOFF.md (Ticket Graph: the Coverage table maps user stories to tickets), and the tracker; never hand-edit it. The tracker wins on ticket status.
      Every "done" item cites a gate lock date, an ADR, or a merge SHA and PR. No secrets, code, or diffs.
      Agent profile: save as .heimdall/PROGRESS.md and post it as a comment on the spec issue (GitHub, Gitea).
      Chat profile: show it in full. Keep it under 90 lines, diagrams included.
@@ -31,7 +31,7 @@ flowchart LR
 ## What works so far
 
 <!-- The user journey: the spec's user stories in the order a user meets them, at most 8 nodes (merge small stories).
-     A story is built when every ticket that covers it (the US → T table) is merged. Before G3 every story is planned. -->
+     A story is built when every ticket that covers it (HANDOFF Coverage table) is merged. Before G3 every story is planned. -->
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"fontFamily": "IBM Plex Sans, Helvetica Neue, Arial, sans-serif", "fontSize": "14px", "primaryColor": "#f4f4f4", "primaryTextColor": "#161616", "primaryBorderColor": "#8d8d8d", "lineColor": "#8d8d8d", "clusterBkg": "#f4f4f4", "clusterBorder": "#c6c6c6", "titleColor": "#161616"}}}%%

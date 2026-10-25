@@ -76,14 +76,19 @@ gh issue edit <n> --remove-label heimdall:ready --add-label heimdall:in-progress
 gh issue comment <n> --body "Claimed by <role>-<agent-id> on branch heimdall/t<nn>-<slug>."
 ```
 
+Every other transition in execution-loop.md, section 2, uses the same shape: `gh issue edit <n> --remove-label heimdall:<from> --add-label heimdall:<to>`. A widened touch set is written back with `gh issue edit <n> --body-file .heimdall/tickets/T<nn>-<slug>.md`.
+
 ## Pull requests
+
+Round 1, after `git push -u origin heimdall/t<nn>-<slug>`:
 
 ```bash
 gh pr create --base <integration-branch> --head heimdall/t<nn>-<slug> \
-  --title "<ticket title> (#<n>)" --body-file .heimdall/reports/T<nn>-pr.md [--draft]
-gh pr ready <pr#>                                        # draft -> ready when the coder finishes
+  --title "<ticket title> (#<n>)" --body-file .heimdall/reports/T<nn>-pr.md
 gh pr view <pr#> --json mergeable,mergeStateStatus,headRefOid,statusCheckRollup
 ```
+
+Round 2 and later: `git push origin heimdall/t<nn>-<slug>` only; the open PR follows the branch. The integration branch itself must already be on `origin` (execution-loop.md, section 3).
 
 ## Review verdicts
 
@@ -99,11 +104,15 @@ Use `gh pr review --approve` / `--request-changes` only when the reviewer runs u
 ## Merge and close
 
 ```bash
-gh pr merge <pr#> --squash --delete-branch --match-head-commit <sha-the-reviewer-approved>
+gh pr merge <pr#> --squash --match-head-commit <guarded-head-sha>
+git fetch origin && git merge --ff-only origin/<integration-branch>     # in the main checkout
+MERGE_SHA=$(git rev-parse HEAD)                                         # serial merges: the tip is the squash commit
+gh pr view <pr#> --json mergeCommit --jq .mergeCommit.oid               # cross-check: must equal $MERGE_SHA
 gh issue close <n> --comment "Merged in <merge-sha> via #<pr#>."
 ```
 
-- `--match-head-commit` refuses the merge if anyone pushed after the review.
+- `--match-head-commit` refuses the merge if anyone pushed after the guarded head was recorded (merge-protocol.md, L6).
+- No `--delete-branch`: it also deletes the local branch, which fails while the ticket's worktree holds it. Delete after the worktree is removed, with `git push origin --delete heimdall/t<nn>-<slug>` (merge-protocol.md, L6, step 7).
 - Closing keywords (`Closes #n`) close issues only when the PR merges into the **default branch**. The merger therefore always closes the ticket explicitly; keywords are a bonus.
 - Use `gh pr merge --auto` only when the repo has required checks configured; otherwise the merger runs the suite itself (merge-protocol.md).
 

@@ -18,16 +18,17 @@ You are the reviewer for one ticket in a multi-agent build. You did not write th
 - HANDOFF: <absolute path to .heimdall/HANDOFF.md> — Settled Decisions, module map, Testing Decisions (seams), Standards, Commands
 - Repo standards files: <CONTRIBUTING.md, CODING_STANDARDS.md, AGENTS.md, … or "none documented">
 - Coder's report: <absolute path to .heimdall/reports/T<nn>-coder-<r>.md>
+- Design (UI tickets): HANDOFF Design Contract; prototype screen <absolute path, or "n/a">; the coder's screenshot <path from the report, or "none">
 - Previous review (round 2+): <absolute path, or "none">
-- Diff: `git -C <worktree> diff <base sha>...<head sha>`   Round 2+: also `git -C <worktree> diff <last reviewed>..<head sha>`
-- Commits: `git -C <worktree> log --reverse --format='%h %s' <base sha>..<head sha>`
+- Diff: `git -C <worktree> diff <base sha>...<head sha>` (the base is the integration tip the coder last merged, so this is only the ticket's change)
+- Commits: `git -C <worktree> log --reverse --no-merges --format='%h %s' <base sha>..<head sha>`   Round 2+: the fix commits are `git -C <worktree> log --reverse --no-merges --format='%h %s' <last reviewed>..<head sha>`; check the open findings first, then the rest of the diff for regressions
 - Touch set: <module: path globs; tests: path globs; hotspots>
 </context>
 
 <procedure>
 1. Confirm `git -C <worktree> rev-parse HEAD` equals `<head sha>`. If not, stop with `VERDICT: STALE`.
 2. Run the full suite and the type checker with the HANDOFF commands. Record the results.
-3. **Spec:** requirements missing or partial; behavior nobody asked for; requirements that look implemented but are wrong. Quote the ticket or spec line for each.
+3. **Spec:** requirements missing or partial; behavior nobody asked for; requirements that look implemented but are wrong. Quote the ticket or spec line for each. UI tickets: compare the coder's screenshot (or the running screen) with the prototype screen; a difference in layout, flow, copy, or states is a Spec finding.
 4. **Standards:** violations of documented repo standards (cite file and rule). Then the smell baseline — Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest — each labelled "possible <smell>" with the hunk quoted. A documented repo standard overrides the baseline. Skip anything tooling enforces.
 5. **TDD audit:** test commits precede or accompany the behavior they cover; every new test sits at a seam listed in the ticket; no implementation-coupled, tautological, or horizontally sliced tests; the report's red column is plausible. Red-at-base check when required: copy the new test files onto a scratch worktree at `<base sha>`, run them, and expect failures; then remove the scratch worktree.
 6. **Security:** secrets in code or history, missing input validation at trust boundaries, injection, missing authentication or authorization checks, risky dependencies.

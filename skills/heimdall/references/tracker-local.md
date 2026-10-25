@@ -30,16 +30,16 @@ Merged: <merge sha>             (empty until closed)
 | Operation | Local implementation |
 |---|---|
 | Preflight | `git rev-parse --show-toplevel` succeeds; the working tree is clean |
-| Setup | create `.heimdall/tickets/` and `.heimdall/reports/`; add `.heimdall/` to `.git/info/exclude` |
+| Setup | create `.heimdall/tickets/`, `.heimdall/packets/`, and `.heimdall/reports/`; add `.heimdall/` to `.git/info/exclude` |
 | Spec issue | `.heimdall/spec.md` |
 | Progress report | `.heimdall/PROGRESS.md` and `.heimdall/progress.html`; nothing is posted |
 | Tickets | write `T<nn>-<slug>.md` from assets/ticket.md with `Status: ready` |
 | Blocking edges | the `Blocked by:` line |
 | Frontier query | `Status: ready`, every `Blocked by` ticket `closed`, touch set free (merge-protocol.md, L3) |
 | Claim and status | edit `Status:` and `Claimed by:` |
-| Pull requests | the branch plus the coder's report; review input is `git diff <integration>...heimdall/t<nn>-<slug>` |
+| Pull requests | none; the branch plus the coder's report stand in. Review input is `git diff <synced-with>...heimdall/t<nn>-<slug>` (the report's `Synced with` SHA). Status still moves to `in-review` |
 | Review verdicts | the review report file plus a `Status:` change |
-| Merge and close | merge-protocol.md, L6, local path: `git merge --squash`, commit `"<ticket title> (T<nn>)"`, then `Status: closed` and `Merged: <sha>` |
+| Merge and close | merge-protocol.md, L6, local path: `git merge --squash`, commit `"<ticket title> (T<nn>)"`, `Merged: $(git rev-parse HEAD)`, then `Status: closed` |
 | Read | read the file |
 
-Pushing the integration branch to a remote, if one exists, happens only at checkpoints the user approves.
+Pushing the integration branch to a remote, if one exists, happens only at checkpoints the user approves: ask at the end of every wave and at G7, with a one-line summary of what the push contains.

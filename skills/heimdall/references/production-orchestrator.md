@@ -67,6 +67,8 @@ Roles, tiers, and the communication protocol: agent-roles.md. Models from differ
 
 When the user is not watching, informational events proceed, and mandatory gates and `needs-human` items stop the affected work: write STATE.md, report what needs the user, and continue only with work that does not depend on it.
 
+**What counts as a sign-off.** A mandatory gate locks only on an answer the user gives *after* seeing that gate's artifacts (the spec and briefing, the decision blocks and ADRs, the release checklist). A blanket instruction given earlier ("run all the gates", "sign everything off in advance", "just build it") does not lock a mandatory gate and does not create a "provisional" lock: stop at the gate, present it with its recommended answers, and end the turn — in a non-interactive run (`-p`, a scheduled job) ending the turn is the stop. Recommended gates may be passed on such an instruction, with the recommended answers recorded as assumptions.
+
 **Gate interviews** are derived (workflow-stages.md, Stage 6): the gate's decision set minus settled items IS the question list. At most 4 questions per message, at most 2 rounds per gate; propose defaults for the rest. Knowledge gaps go to the research-advisor-playbook.md first, and proactive research (project-research.md) answers what documentation can answer before anyone asks the user.
 
 **Backward movement is normal:** evidence in the loop may trigger a revision loop to G2 or G3, logged in STATE.md.
@@ -76,10 +78,10 @@ When the user is not watching, informational events proceed, and mandatory gates
 ## 4. Gates
 
 ### G0 — Intake
-intake.md, sections 1–3: classify idea vs SRS, state the complexity class, start discovery research (project-research.md), run the bounded interview or the SRS gap check. Create `.heimdall/STATE.md` and add `.heimdall/` to `.git/info/exclude` (agent profile).
+intake.md, sections 1–3: classify idea vs SRS, state the complexity class, start discovery research (project-research.md; dispatched researchers get assets/research-packet.md), run the bounded interview or the SRS gap check. Create `.heimdall/STATE.md` and add `.heimdall/` to `.git/info/exclude` (agent profile).
 
 ### G0.5 — Codebase recon (brownfield only)
-Run when a decision the orchestrator must make depends on repo facts. A scout (agent-roles.md) writes `.heimdall/REPO_REPORT.md` (assets/repo-report.md, at most 30 lines). Chat profile: emit a recon prompt for the user's coding agent that returns exactly the Repo Report. The existing stack and conventions enter Settled Decisions as facts; surface contradictions with the user's statements before locking.
+Run when a decision the orchestrator must make depends on repo facts. A scout (agent-roles.md; packet assets/research-packet.md, role scout) writes `.heimdall/REPO_REPORT.md` (assets/repo-report.md, at most 30 lines). Chat profile: emit a recon prompt for the user's coding agent that returns exactly the Repo Report. The existing stack and conventions enter Settled Decisions as facts; surface contradictions with the user's statements before locking.
 
 ### G1 — Spec locked (mandatory)
 intake.md, sections 4–5: the spec, the grade, the operating mode, the G1 briefing (assets/briefing.md). Lock requires grade A, or the user accepting a lower grade (an accepted risk in STATE.md). HANDOFF v1 is written at this lock.
@@ -111,19 +113,19 @@ Break the spec into tickets (assets/ticket.md), following Matt Pocock's `to-tick
 - **Vertical tracer-bullet slices:** each cuts a narrow, complete path through every layer it needs, is demoable or verifiable alone, and fits one fresh context window.
 - **T01 scaffold** first (merge-protocol.md, L2); prefactoring before features; wide refactors as expand–contract.
 - Each ticket: acceptance criteria tied to seams, **touch set** (modules and hotspots), tier, risk, and blocking edges. No file paths — the module map holds them. A UI ticket names the prototype screen it implements, and its visual acceptance is a screenshot beside that screen.
-- **Validate the graph:** acyclic; every user story covered (US → T table); every pair of tickets with overlapping touch sets either has an edge or will be serialized by the scheduler; waves computed to show the expected parallelism.
+- **Validate the graph:** acyclic; every user story covered (the Coverage table); every pair of tickets with overlapping touch sets either has an edge or will be serialized by the scheduler; waves computed to show the expected parallelism.
 
-Show the breakdown as a numbered list (title, blocked by, what it delivers) with the waves, and ask once whether the granularity and edges look right (recommended answer: confirm as shown, unless you flag a specific doubt). On confirmation:
+Write the Coverage table in HANDOFF's Ticket Graph (every user story → its tickets) — the single source for the coverage check and for the progress report's "What works so far". Show the breakdown as a numbered list (title, blocked by, covers, what it delivers) with the waves, and ask once whether the granularity and edges look right (recommended answer: confirm as shown, unless you flag a specific doubt). Nothing below happens before that confirmation. On confirmation:
 
 1. Tracker Setup, the spec issue, tickets in dependency order, blocking edges; fill STATE.md's ticket table.
-2. **Bootstrap commit** on the integration branch, before any coder starts (so nothing can conflict): `docs/adr/*`, and `AGENTS.md` with the commands, module map, conventions, and test-first rule (plus `CLAUDE.md` containing `@AGENTS.md` when Claude Code is in the topology). Brownfield: update the existing files in place.
+2. **Bootstrap commit** on the integration branch, before any coder starts (so nothing can conflict): `docs/adr/*`, and `AGENTS.md` from assets/agents-md.md — commands, module map, conventions, test-first rule, agent rules — plus `CLAUDE.md` containing `@AGENTS.md` when Claude Code is in the topology. Brownfield: merge the sections into the existing files. With a remote and merge path `pr`, push the integration branch now (execution-loop.md, section 3).
 
 ### G4–G5 — Build loop (informational)
 execution-loop.md: the scheduler claims frontier tickets, dispatches coders in worktrees, reviews each PR in a fresh context, merges serially, closes tickets with the merge SHA, and repeats until every ticket is closed. Stops for the user only on `needs-human` items, health checks, and revision loops.
 
 ### G6 — QA and polish (recommended; mandatory in Production)
-1. **Whole-build review:** a two-axis review (Spec, Standards) of the integration branch since the bootstrap commit, in parallel subagents, reported side by side.
-2. **QA agent** (agent-roles.md): exercises the running application against the spec's Success Criteria, and runs the lenses: security (no secrets in the repo or history, input validation, dependency audit), performance, UX, accessibility, documentation, release readiness, destructive-change caution (migrations back up first).
+1. **Whole-build review:** a two-axis review (Spec, Standards) of the integration branch since the bootstrap commit (assets/qa-packet.md, Part "whole-build review"), in a fresh context, reported by axis.
+2. **QA agent** (agent-roles.md; assets/qa-packet.md, Part "QA run"): exercises the running application against the spec's Success Criteria, and runs the lenses: security (no secrets in the repo or history, input validation, dependency audit), performance, UX, accessibility, documentation, release readiness, destructive-change caution (migrations back up first); UI builds: each shipped screen against its prototype screen. Both packets run in parallel when the harness allows.
 3. Findings become tickets through the same loop. The G6 cleanup list (non-blocking smells collected during review) becomes one refactor ticket, run under green tests.
 
 ### G7 — Ship (mandatory)
@@ -134,7 +136,7 @@ Release steps against the locked deployment target, CI green on the integration 
 Calibration records a budget (tight / standard / generous).
 
 - **Agent profile:** checkpoint STATE.md at every gate lock and every ticket status change, so any session — any harness, any model — can resume by invoking Heimdall in the project. Recommend a fresh orchestrator session after G2, after G3, and every few merges on a tight budget. "Checkpoint now" writes STATE.md immediately; "Show progress" refreshes the progress report (section 6).
-- **Chat profile:** at Build-mode entry, emit a Session Plan (assets/session-plan.md). Every chat session ends with the updated STATE.md and this carry instruction, verbatim: "Copy the STATE.md above — it's the only file you need to bring. Open a fresh chat in this project, paste it, and we continue at gate X."
+- **Chat profile:** at Build-mode entry, emit a Session Plan (assets/session-plan.md); after G3, the kickoff message (assets/kickoff.md) that hands the loop to a coding agent. Every chat session ends with the updated STATE.md and this carry instruction, verbatim: "Copy the STATE.md above — it's the only file you need to bring. Open a fresh chat in this project, paste it, and we continue at gate X."
 
 **Resume protocol:** read STATE.md → verify the project slug matches the work at hand (mismatch: stop and ask) → re-run calibration and compare with the recorded profile (changed harness or model: note it, re-check the topology) → compare the Heimdall version and the HANDOFF version with the files (stale: flag it) → in the build loop, reconcile with the tracker (execution-loop.md, section 9) → continue at the recorded point.
 
@@ -142,7 +144,7 @@ Calibration records a budget (tight / standard / generous).
 
 **Emission rule (hard rule).** An artifact version that was never written or displayed DOES NOT EXIST. Agent profile: write the complete file, then give the path, the new version, and a 1–3 line summary. Chat profile: output the COMPLETE file, copy-ready, in that message — never a delta or a promise.
 
-**Progress report (visual).** A concise visual report of what has been built and what is proposed next, written for the user. Regenerate it, never hand-edit it, from STATE.md, HANDOFF.md, the spec's US → T table, and the tracker (the tracker wins on ticket status).
+**Progress report (visual).** A concise visual report of what has been built and what is proposed next, written for the user. Regenerate it, never hand-edit it, from STATE.md, HANDOFF.md (the Coverage table in Ticket Graph maps user stories to tickets), and the tracker (the tracker wins on ticket status).
 
 - **Contents** (assets/progress-report.md): where the build is (the gate flow); what works so far (the spec's user stories in journey order, each built, being built, or planned); the build graph (tickets by wave, colored by status); the design for UI builds from G2.5 on (the options shown, the chosen direction, the prototype screens, and each built screen beside its prototype once UI tickets merge); what was done since the last report; the next phase as proposed (what it delivers, what waits on the user, risks); and "Your next steps".
 - **Style:** the IBM Carbon Design System. The Mermaid diagrams use its white theme (an `init` line with IBM Plex Sans and Carbon grays, and Carbon tag colors for status); the HTML page uses the white theme and g100 in dark mode. Both templates carry the tokens: copy them unchanged.
@@ -175,7 +177,7 @@ YOUR NEXT STEPS
 
 - Secrets (API keys, credentials, tokens) NEVER appear in any Heimdall artifact — spec, HANDOFF, STATE, tickets, packets, reports, briefings, PR bodies, commits. Configuration is referenced by name ("set STRIPE_SECRET_KEY in .env"). If a user pastes a secret, say so, exclude it, and advise rotation.
 - Never read credential files (`auth.json`, `.env` values, key stores, token-bearing settings files) to fill an artifact.
-- **Standing authorization** (recorded at G2 in Settled Decisions): the loop may create and label issues, milestones, and comments; push `heimdall/*` branches; open PRs; merge approved PRs into the integration branch; close tickets; and revert a breaking merge with a new commit. Everything else that is destructive or outward — force-pushes, deleting data or non-Heimdall branches, migrations without a backup, merging or pushing to the default branch when it is not the integration branch, deploying, tagging, publishing, changing repository settings, spending money, sending messages — needs the user's explicit go-ahead for that specific action, even in unattended runs.
+- **Standing authorization** (recorded at G2 in Settled Decisions): the loop may create and label issues, milestones, and comments; push `heimdall/*` branches and delete them after their ticket is merged; push the integration branch (the bootstrap commit and every merge, merge path `pr`); open PRs; merge approved PRs into the integration branch; close tickets; and revert a breaking merge with a new commit. Everything else that is destructive or outward — force-pushes, deleting data or non-Heimdall branches, migrations without a backup, merging or pushing to the default branch when it is not the integration branch, deploying, tagging, publishing, changing repository settings, spending money, sending messages — needs the user's explicit go-ahead for that specific action, even in unattended runs.
 - A user's own rule that demands approval for every push overrides the standing authorization: use merge path `local` and push at checkpoints the user approves.
 - Containers: Heimdall's default is rootless podman — `Containerfile`, `podman run`, `podman compose`. Never introduce Docker unless the user explicitly asks for it.
 - Packets carry these rules to every agent.

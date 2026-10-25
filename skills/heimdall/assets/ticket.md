@@ -1,19 +1,22 @@
 <!-- Heimdall ticket template (references/execution-loop.md, G3).
-     Remote trackers: the title becomes the issue title; this body becomes the issue body; status lives in labels,
-     so drop the status block. Local tracker: keep the status block at the top (references/tracker-local.md).
+     Remote trackers: the title becomes the issue title; this body becomes the issue body with `Part of #<spec>` as
+     its first line; status lives in labels, so drop only the Status, Claimed by, and Merged lines (keep Kind,
+     Covers, Screen, Blocked by, Branch). Local tracker: keep everything (references/tracker-local.md).
      No file paths (they live in HANDOFF.md's module map) and no code, except a decision-rich prototype snippet. -->
 
 # T<nn>: <ticket title>
 
+Part of #<spec issue>   <!-- remote trackers: first body line; on GitHub, --parent also links it -->
+
 Status: ready
 Kind: <feature | prefactor | bug | env>
+Covers: <US-01, US-03 | none (scaffold, env, prefactor)>
+Screen: <prototype screen file, e.g. .heimdall/design/prototype/today.html — UI tickets only | n/a>
 Milestone: <milestone title>
 Blocked by: <T03, T05 | none>
-Branch: heimdall/t<nn>-<slug>
+Branch: heimdall/t<nn>-<slug>   <!-- <slug>: the title in kebab-case, at most 40 characters; never changed -->
 Claimed by:
 Merged:
-
-Part of #<spec issue>   <!-- remote trackers; on GitHub, --parent also links it -->
 
 ## What to build
 <The end-to-end behavior this ticket makes work, from the user's perspective — a vertical slice through every layer it needs, not a layer-by-layer task list.>
@@ -21,6 +24,7 @@ Part of #<spec issue>   <!-- remote trackers; on GitHub, --parent also links it 
 ## Acceptance criteria
 - [ ] <observable action and result> — seam: <seam name>
 - [ ] <…>
+- [ ] <UI tickets: the screen matches its prototype screen in layout, flow, copy, and states; screenshot in the report>
 
 ## Seams under test
 - <seam name from HANDOFF.md Testing Decisions>

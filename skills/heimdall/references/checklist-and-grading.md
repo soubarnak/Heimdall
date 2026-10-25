@@ -68,6 +68,8 @@ The grade expresses confidence that the prompt or plan will produce the intended
 - Assumptions the user explicitly confirmed count as provided information, not gaps.
 - Decisions made after a Pathway A digest or Pathway B research count as provided information — full A eligible.
 - Explicit delegation of a critical decision ("you pick") caps the grade at C; say so at the moment of delegation.
+- Accepting a recommendation counts as an informed decision when the user saw the options first — a decision block (research-advisor-playbook.md, Pathway A) or a question with its options and recommended answer — whether they accept one at a time or all at once ("go with your recommendations"). Full A eligible. "You pick" before the options were shown is delegation (the C cap above).
+- "Just proceed" on open preference questions makes them listed assumptions; grade them like any other assumption the user has not confirmed (usually B), never as delegation.
 - N/A checklist items never lower a grade.
 - Always name the specific missing items that cap the grade, so the user has a clear path to an A.
 - Never inflate: polish does not raise a grade built on withheld information.

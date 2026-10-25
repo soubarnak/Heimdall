@@ -23,7 +23,7 @@ Decide these in ARCH (HANDOFF.md) so parallel tickets do not need the same files
 
 ### L2 — Scaffold first (G3)
 
-T01 is the **scaffold/prefactor ticket** (walking skeleton): repository init or prefactor, toolchain, test runner and the commands in HANDOFF, CI, formatter and linter, the module skeleton from the module map, discovery-based registries, foreseeable dependencies, `.env.example` names, and migration setup. Every other ticket is blocked by T01. Brownfield builds replace it with prefactor tickets ("make the change easy, then make the easy change") that create the seams and registries the later tickets need.
+T01 is the **scaffold/prefactor ticket** (walking skeleton): toolchain, test runner and the commands in HANDOFF, CI, formatter and linter, the module skeleton from the module map, discovery-based registries, foreseeable dependencies, `.env.example` names, and migration setup. Every other ticket is blocked by T01. Brownfield builds replace it with prefactor tickets ("make the change easy, then make the easy change") that create the seams and registries the later tickets need.
 
 ### L3 — Touch sets and hotspot locks (G3, enforced by the scheduler)
 
@@ -59,32 +59,35 @@ Before reporting done, the coder merges the integration tip into its branch, run
 git -C <worktree> merge --no-edit <integration-branch>
 ```
 
-Before the PR exists the coder may rebase instead; after the PR exists, merge only (rebasing rewrites the commits the reviewer audited).
+If the merge changed a dependency manifest or lockfile, the coder runs the Install command (HANDOFF) before the suite. Before the PR exists the coder may rebase instead; after the PR exists, merge only (rebasing rewrites the commits the reviewer audited). The report's `Synced with` line names the integration SHA that was merged; it is the review base.
 
 ### L6 — Serial merger
 
 Exactly one merge runs at a time. For each approved ticket, in approval order:
 
-1. **SHA guard.** The PR head (or branch tip) must equal the SHA the reviewer approved. Any later push sends it back to review.
+1. **SHA guard.** The branch tip (remote: the PR head) must equal the **guarded head** recorded in STATE.md: the head the reviewer approved, or the head produced by step 3 below. Any other change sends the ticket back to review.
 2. **Pre-check** against the current integration tip, without touching any worktree:
    ```bash
    git fetch origin                                   # remote trackers only
    git merge-tree --write-tree --name-only --no-messages <integration-branch> heimdall/t<nn>-<slug>
    # exit 0 = clean; exit 1 = conflicts (the conflicted paths are listed after the tree id)
    ```
-3. **Update and test.** If the integration tip moved since the coder's sync, merge it into the ticket branch in the ticket's worktree and run the full suite there. Clean and green → continue (no re-review: the incoming changes were already reviewed). Red → semantic conflict, see the table below.
-4. **Merge** with the tracker's operation (squash, one commit per ticket, guarded by the new head SHA) or, on the local merge path:
+3. **Update and test.** If the integration tip moved since the coder's sync, merge it into the ticket branch in the ticket's worktree (`git -C <worktree> merge --no-edit <integration-branch>`; run the Install command if a lockfile changed) and run the full suite there. Clean and green → on merge path `pr`, push the branch (`git -C <worktree> push origin heimdall/t<nn>-<slug>`; the standing authorization covers it) and record the new head as the guarded head in STATE.md; no re-review, because the merge added only commits that were already reviewed. A merge that needed hand-resolved hunks is a conflict (L7). Red → semantic conflict (L7).
+4. **Merge** with the tracker's operation (squash, one commit per ticket, guarded by the recorded head) or, on the local merge path:
    ```bash
    git switch <integration-branch> && git merge --squash heimdall/t<nn>-<slug> && git commit -m "<ticket title> (T<nn>)"
    ```
-5. **Verify the integration tip** (CI or the full suite). Red after a merge stops all new dispatches until it is green again (fix-forward ticket, or `git revert -m 1 <sha>` / `git revert <sha>` — a new commit, never a reset).
-6. **Close and clean up:** close the ticket with the merge SHA (tracker file), fast-forward the main checkout (`git pull --ff-only` or `git merge --ff-only`), then
+5. **Record the merge SHA.** Merges are serial, so the integration tip right after the merge is the squash commit: remote, `git fetch origin && git merge --ff-only origin/<integration-branch>` in the main checkout, then `git rev-parse HEAD` (GitHub cross-check: `gh pr view <pr#> --json mergeCommit --jq .mergeCommit.oid`); local path, `git rev-parse HEAD`.
+6. **Verify the integration tip** in the main checkout (CI, or the full suite). Red after a merge stops all new dispatches until it is green again (fix-forward ticket, or `git revert -m 1 <sha>` / `git revert <sha>` — a new commit, never a reset).
+7. **Close and clean up:** close the ticket with the merge SHA (tracker file), then, in this order:
    ```bash
    git worktree remove <worktree-root>/t<nn>-<slug>
-   git branch -d heimdall/t<nn>-<slug>        # -D after a squash merge: git cannot see squashed history as merged
+   git branch -D heimdall/t<nn>-<slug>        # -D: git cannot see squashed history as merged
+   git push origin --delete heimdall/t<nn>-<slug>   # remote trackers; covered by the standing authorization
    git worktree prune
    ```
-7. Recompute the frontier (execution-loop.md).
+   Never use `gh pr merge --delete-branch` or `tea pulls clean`: both delete the local branch while the worktree still holds it.
+8. Recompute the frontier (execution-loop.md).
 
 ### L7 — When a conflict happens anyway
 
@@ -100,7 +103,7 @@ Every conflict is a signal that L1–L3 missed something. Record it in STATE.md 
 ## Hard rules
 
 - Never force-push the integration branch or the default branch. Never `reset --hard` a shared branch. Undo with revert commits.
-- Never merge a ticket that is not approved at its current head SHA.
+- Never merge a ticket whose head is not the guarded head recorded in STATE.md (the approved head, or the update-merge head from L6 step 3).
 - Never resolve a non-mechanical conflict silently; it goes back to a coder or up to the orchestrator.
 - Never let two coders share a worktree or a branch.
 - Merging into the default branch, and every push, happens only under the standing authorization recorded at G2 (production-orchestrator.md, G2). A user rule that demands approval per push overrides it: then use the local merge path and push at user-approved checkpoints.

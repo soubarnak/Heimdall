@@ -76,11 +76,13 @@ The reviewer audits:
 3. **Red-at-base check** (mandatory in Production and on High-risk tickets; one spot-check in MVP; skipped in Prototype): run the ticket's new tests against the base code. They must fail.
    ```bash
    git worktree add --detach <scratch> <base-sha>
-   git -C <worktree> diff --name-only <base-sha> <head-sha> -- <test paths> | while read -r f; do
+   (cd <scratch> && <Install command from HANDOFF>)            # the scratch tree has no installed dependencies
+   git -C <worktree> diff --name-only --diff-filter=AM <base-sha> <head-sha> -- <test paths> | while read -r f; do
      mkdir -p "<scratch>/$(dirname "$f")" && git -C <worktree> show <head-sha>:"$f" > "<scratch>/$f"
    done
    # run only those test files in <scratch>; expect failures; then: git worktree remove --force <scratch>
    ```
+   `<base-sha>` is the report's `Synced with` SHA. A test that fails in the scratch tree because of a missing dependency or a renamed module, not a missing behavior, is a setup error, not a red: install or mirror the dependency and run again.
    A new test that passes on the base code tests nothing new.
 
 ## 7. Bugs

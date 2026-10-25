@@ -35,6 +35,15 @@
 - generated files: <not committed | regenerated after merge with <command>>
 - formatting: <formatter config in T01; format touched files only>
 
+| Hotspot | Path globs (the scope check resolves hotspots with this table) |
+|---|---|
+| `deps` | `package.json`, `package-lock.json` |
+| `schema` | `db/migrations/**` |
+| `config` | `.env.example`, `config/**`, `.github/workflows/**` |
+| `styles` | `src/styles/**` |
+| `registry:<name>` | `<path>` |
+| `public-api:<module>` | <the module's interface file(s)> |
+
 ### Commands
 - Install: `<…>`   Dev / run: `<…>`   Build: `<…>`
 - One test file: `<…>`   Full suite: `<…>`   Type-check: `<…>`   Lint / format: `<…>`   End-to-end: `<…>`
@@ -62,6 +71,11 @@
 |---|---|---|
 | 1 | T01 → #<n> scaffold | blocks everything |
 | 2 | T02, T03, T04 | parallel; disjoint touch sets |
+
+### Coverage  <!-- every user story → the tickets that build it; the single source for G3 validation and the progress report -->
+| User story | Tickets | Built when |
+|---|---|---|
+| US-01 <short title> | T02, T04 | both merged |
 
 ## Constraints
 <performance, compliance, budget, platform, accessibility, licensing>

@@ -1,6 +1,6 @@
 # Heimdall Adaptation Report
 
-How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill that takes an idea or an SRS to a shipped application. Written 2026-10-25 for version 1.0.0; updated 2026-10-26 for 1.1.0 (visual progress report, G2.5 prototype).
+How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill that takes an idea or an SRS to a shipped application. Written 2026-10-25 for version 1.0.0; updated 2026-10-26 for 1.1.0 (visual progress report, G2.5 prototype) and 1.2.0 (loop audit, section 17).
 
 ## Contents
 
@@ -20,14 +20,14 @@ How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill
 14. Limits, unverified items, and risks
 15. Assumptions made
 16. Maintenance
-
+17. Audit and fixes (2026-10-26)
 ## 1. Summary
 
 The original repository held eight knowledge files for a claude.ai Project. Together they made Claude act as a prompt optimizer and as a "production orchestrator" that planned software through gates and then handed copy-paste packets to a separate coding agent, with the user ferrying reports back by hand. It assumed Claude models, the claude.ai interface, and Claude plan tiers throughout.
 
 The adaptation keeps that design's best ideas — calibration, complexity routing, decision gates, advisor stance for knowledge gaps, derived interviews, the 22-item checklist, artifact discipline, and the "Your next steps" rule — and changes what it is:
 
-- **One installable Agent Skill** (`skills/heimdall/`) instead of loose knowledge files: a 106-line `SKILL.md` entry point, 27 references loaded on demand, and 19 asset templates.
+- **One installable Agent Skill** (`skills/heimdall/`) instead of loose knowledge files: a 106-line `SKILL.md` entry point, 27 references loaded on demand, and 23 asset templates.
 - **It runs the build itself.** In an agent harness, Heimdall publishes a ticket graph to GitHub issues, Gitea issues, or local files, dispatches test-first coder agents into isolated git worktrees, sends every change to a fresh-context reviewer, and lands changes through one serial merger. The user signs off at a few gates instead of relaying every packet.
 - **It informs the user.** A Researcher role researches proactively at intake, architecture, and per ticket; every significant architecture choice becomes an ADR; briefings at G1, G2, and G7 say what was decided, what the user must decide, do, and learn, and what the risks and costs are.
 - **It is harness- and model-agnostic.** Detection replaces the old model/plan-tier question; 13 harnesses have adapters; 11 model families have prompting guides verified against vendor documentation on 2026-10-25; a tier map turns "Light / Standard / Frontier" into concrete model ids and selection flags per harness.
@@ -99,7 +99,7 @@ Defects found while reading it:
 | (none) | references/tracker-github.md, tracker-gitea.md, tracker-local.md | New: tracker implementations |
 | (none) | references/harness-adapters.md | New: dispatch methods and per-harness facts |
 | (none) | references/prompting-universal.md and eight family files | New: cross-vendor and per-family prompting |
-| Templates inside the orchestrator file | assets/ (19 files) | Extracted into fill-in templates: spec, handoff, state, decisions, briefing, research digest, ADR, repo report, setup packet, session plan, ticket, coder packet, return report, review packet, review report, merge packet, PR body |
+| Templates inside the orchestrator file | assets/ (23 files) | Extracted into fill-in templates: spec, handoff, state, decisions, briefing, research digest, ADR, repo report, setup packet, session plan, ticket, coder packet, return report, review packet, review report, merge packet, PR body |
 
 ## 5. Architecture of the skill
 
@@ -273,3 +273,13 @@ Risks to watch:
 - When a vendor ships new models, edit agent-model-map.md and that family's prompting file, and update the verification date.
 - When a harness changes its skill folders or flags, edit harness-adapters.md, INSTALL.md, and scripts/install.sh together.
 - Keep `metadata.version` in SKILL.md and `version` in `.claude-plugin/plugin.json` equal, and record each release in CHANGELOG.md.
+
+## 17. Audit and fixes (2026-10-26)
+
+Version 1.2.0 followed an audit of the skill against its desired result (idea or SRS → shipped application through gated, tracker-visible, test-first, conflict-free multi-agent work, with research, ADRs, briefings, a visual progress report, a confirmed prototype, and one recommended answer per question). Three checks ran: a numbered-section cross-reference check (clean), a fresh-context review of the build loop that walked one ticket through GitHub with `pr`, local with `local`, and Gitea with a headless coder, and a live dry run of the installed skill from G0 to G3 in a scratch repository (`claude -p`, Sonnet, offline, local tracker).
+
+Findings that blocked a ticket on GitHub or Gitea: the integration branch was never pushed, so no PR could target it; fix rounds never pushed, so reviews approved unpushed heads and the merge guard failed; headless coders could not commit (`acceptEdits` alone denies shell commands in `-p` mode, verified on Claude Code 2.1.310; Codex `workspace-write` confines writes to the worktree while a linked worktree commits into the main checkout's `.git`). Findings that made agents diverge: the review base SHA was undefined; the merger's update step contradicted the SHA guard; `git worktree add -b` failed on retries; no command produced the merge SHA; hotspots had no path mapping; lock release and the cap were undefined. Ambiguities: several status transitions had no trigger or command, slug and round were undefined, `STATUS: FAILED` and `VERDICT: STALE` had no route, branch deletion commands conflicted, `.heimdall/packets/` was never created, draft PRs had no trigger, the red-at-base check ignored dependency installation.
+
+The dry run produced every artifact (spec, HANDOFF, STATE, briefings, research, three mockups, a prototype, nine tickets, five ADRs, AGENTS.md, the progress report) but locked G1 and G2 "provisionally" on a blanket "run the gates" instruction and committed the bootstrap before the G3 confirmation. The gate-level rule now defines what counts as a sign-off.
+
+Design gaps closed at the same time: no single source for user story → ticket coverage (the progress report's "What works so far" had no input), no prototype pointer in tickets or packets, no templates for the G6 packets, the researcher and scout packets, the chat-to-agent kickoff, or the bootstrap AGENTS.md, and a grading rule that could cap an accepted recommendation at C. Sections 6, 7, and 8 describe the resulting protocol; CHANGELOG.md lists every change.

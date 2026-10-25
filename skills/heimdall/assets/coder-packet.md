@@ -20,6 +20,7 @@ You are a coder in a multi-agent build. You implement exactly one ticket, test-f
 - Spec: <absolute path to .heimdall/spec.md> — read user stories <US-nn, …> and the Glossary.
 - HANDOFF: <absolute path to .heimdall/HANDOFF.md> — read Settled Decisions, ARCH (module map, commands), Testing Decisions, Standards.
 - Research notes: <absolute paths, or "none">
+- Design (UI tickets): HANDOFF Design Contract; the screen to implement is <absolute path to .heimdall/design/prototype/<screen>.html, or "n/a">. Match its layout, flow, copy, and states; take a screenshot for the report when a browser or screenshot tool is available, otherwise describe any deviation.
 - Review to address (fix rounds only): <absolute path to .heimdall/reports/T<nn>-review-<r-1>.md, or "none">
 </context>
 
@@ -41,7 +42,7 @@ Never: mock your own modules (mock only external services, time, randomness), te
 </tdd>
 
 <finish>
-1. Merge the integration tip: `git merge --no-edit <integration-branch>`. Resolve only conflicts inside your touch set; otherwise `git merge --abort` and report `STATUS: BLOCKED: dependency`.
+1. Merge the integration tip: `git merge --no-edit <integration-branch>`. Resolve only conflicts inside your touch set; otherwise `git merge --abort` and report `STATUS: BLOCKED: dependency`. If the merge changed a dependency manifest or lockfile, run the Install command. Record the integration SHA you merged (`git rev-parse <integration-branch>`) as `Synced with` in the report.
 2. Run the full suite, the type checker, and the linter with the commands in HANDOFF.md. Everything green.
 3. `git status` is clean; every change is committed on `heimdall/t<nn>-<slug>`.
 4. Your final message is the return report below and nothing else.

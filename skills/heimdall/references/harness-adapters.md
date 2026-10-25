@@ -29,7 +29,9 @@ Rules for every method:
 - Never pass a permission-bypass flag (`--dangerously-skip-permissions`, `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `--auto`, `-s danger-full-access`, `--permission-mode bypassPermissions`) unless the user asks for it for that run.
 - One worktree and branch per ticket (`heimdall/t<nn>-<slug>`), created by the orchestrator from the integration tip. A harness's own worktree isolation is acceptable only if it bases the worktree on the integration tip.
 - Coders need network access only for dependency installs (for example Codex `-c sandbox_workspace_write.network_access=true` for the tickets that hold the `deps` hotspot). They never need tracker access or push rights.
-- After a headless run, read the report file; if it is missing, read the command's final output and treat the run as an executor failure (execution-loop.md, section 8).
+- **Working directory:** run every headless command from the main checkout, in a subshell that enters the worktree — `(cd <worktree> && <command>)` — or with the CLI's own directory flag (`-C <worktree>` for Codex). Packet and report paths are always absolute, under the main checkout's `.heimdall/`.
+- **Report capture:** every headless run must leave its final message at `.heimdall/reports/T<nn>-<role>-<r>.md`; the per-harness line below says how (an output flag, or stdout redirected). If the file is missing or empty afterwards, treat the run as an executor failure (execution-loop.md, section 8).
+- **Shell for coders and reviewers:** a headless coder runs the test runner and commits; a reviewer runs tests and git. Grant exactly those commands. A linked worktree commits into the main checkout's `.git`, so sandboxes that confine writes to the worktree (Codex `workspace-write`) also need the main checkout's `.git` as a writable root.
 
 ## 2. Harness table
 
@@ -58,34 +60,34 @@ Invocation: Claude Code `/heimdall` (plugin: `/heimdall:heimdall`); Codex `$heim
 ### Claude Code
 
 - Subagents: the Agent tool, or `.claude/agents/<name>.md` with `model:` (`haiku|sonnet|opus|fable|<full id>|inherit`), `effort:` (`low`–`max`), `tools:`, `isolation: worktree`. Subagents cannot call AskUserQuestion.
-- Headless (from the worktree): `claude -p "$(cat <main checkout>/.heimdall/packets/T<nn>-review-<r>.md)" --model <alias> --effort <level> --permission-mode acceptEdits --output-format json` (add `--allowedTools` to restrict). `-p` skips the workspace-trust dialog: use it only in trusted project directories.
+- Headless coder: `(cd <worktree> && claude -p "$(cat <abs packet>)" --model <alias> --effort <level> --permission-mode acceptEdits --allowedTools "Bash(git:*),Bash(<test runner>:*),Bash(<package manager>:*)" --max-turns <n> --output-format json | jq -r .result > <abs report>)`. `acceptEdits` alone denies every shell command in `-p` mode (verified 2026-10-26, Claude Code 2.1.310: `git commit` was refused and reported under `permission_denials`); `--allowedTools` grants the commands the packet needs — never bare `Bash` for a coder. Reviewer: the same with `--allowedTools "Bash(git:*),Bash(<test runner>:*),Read,Grep,Glob" --disallowedTools "Edit,Write"`. `-p` skips the workspace-trust dialog: use it only in trusted project directories. The report is `.result` of the JSON output.
 - Model and effort in session: `/model`, `/effort`.
 - Other vendors' models via `ANTHROPIC_BASE_URL` (DeepSeek, Kimi, GLM, MiniMax, Meta): the slot names (`opus`, `sonnet`, `haiku`) then map to that vendor's models — record the real model in STATE.md.
 
 ### Codex CLI
 
 - Subagents: `spawn_agent` / `wait_agent` (`features.multi_agent`, on by default); roles in `.codex/agents/*.toml`; defaults `agents.default_subagent_model`, `agents.default_subagent_reasoning_effort`. GPT-6 "may delegate less often than desired" — say explicitly when to spawn.
-- Headless: `codex exec -m <model> -c model_reasoning_effort="<level>" -s workspace-write -C <worktree> -o .heimdall/reports/T<nn>-coder-<r>.md "$(cat .heimdall/packets/T<nn>-coder-<r>.md)"` (run from the main checkout so the `-o` path lands in `.heimdall/`). `--json` streams JSONL; `--output-schema <file>` constrains the final message; `--ephemeral` keeps no session files.
+- Headless: `codex exec -m <model> -c model_reasoning_effort="<level>" -s workspace-write -c 'sandbox_workspace_write.writable_roots=["<main checkout>/.git"]' -C <worktree> -o <abs report> "$(cat <abs packet>)"`. The `writable_roots` entry (config key `sandbox_workspace_write.writable_roots`, Codex config reference) lets the coder commit from a linked worktree; without it `git commit` fails inside the sandbox. `-o` writes the final message to the report path. `--json` streams JSONL; `--output-schema <file>` constrains the final message; `--ephemeral` keeps no session files.
 - Sandbox `-s read-only|workspace-write|danger-full-access`; approvals `-a <policy>` (top-level `codex`).
 - AGENTS.md over 32 KiB is silently truncated (`project_doc_max_bytes`).
 
 ### Muse Code
 
 - Subagents: native (lead session spawns children; `/subagents`, `/tasks`); `--subagent-worktree-isolation` isolates only children that ask.
-- Headless (from the worktree): `muse exec --prompt-file <main checkout>/.heimdall/packets/T<nn>-coder-<r>.md --model <id> --reasoning-effort <level> --trust-workspace --user-input-auto-resolve`; `--json` for events; `--output-schema <file>` (Meta provider only); `--max-model-steps <n>` caps runaway loops. Exit 0 = completed, 1 = failed or step cap, 2 = usage error. Keep the default approval mode and sandbox unless the user chooses otherwise.
+- Headless: `(cd <worktree> && muse exec --prompt-file <abs packet> --model <id> --reasoning-effort <level> --trust-workspace --user-input-auto-resolve > <abs report>)`; stdout holds the final message in text mode (capture UNVERIFIED on this machine); `--json` emits events instead; `--output-schema <file>` (Meta provider only); `--max-model-steps <n>` caps runaway loops. Exit 0 = completed, 1 = failed or step cap, 2 = usage error. Keep the default approval mode and sandbox unless the user chooses otherwise.
 - Install from a local path: `muse skills validate <path>` then `muse skills install <path> --scope user`. `muse skills list --source all` shows what loaded.
 - Default model differs between docs (`muse-spark-1.2`) and the local catalog (`muse-wonder-1.0`): pin the model explicitly.
 
 ### OpenCode
 
 - Subagents: `.opencode/agents/<name>.md` with `mode: subagent`, `model: provider/model`, `permission:` (e.g. `edit: allow`, `bash: ask`), `steps:`; run in child sessions via the `subagent` tool. Commands with `subtask: true` also spawn a subagent.
-- Headless (from the worktree): `opencode run -m <provider/model> --agent <agent> -f <main checkout>/.heimdall/packets/T<nn>-coder-<r>.md "Execute the attached packet."` (`--format json` for events). `--auto` approves everything not explicitly denied — consent required.
+- Headless: `(cd <worktree> && opencode run -m <provider/model> --agent <agent> -f <abs packet> "Execute the attached packet." > <abs report>)`; stdout holds the response in text mode (capture UNVERIFIED on this machine); `--format json` emits events instead. `--auto` approves everything not explicitly denied — consent required.
 - Muse via OpenCode loses reasoning across turns (`@ai-sdk/openai-compatible`); prefer Muse Code for Muse executors.
 
 ### pi
 
 - No built-in subagents ("Pi ships with powerful defaults but skips features like sub-agents and plan mode"). Use same-session execution, or headless pi runs, or the community `pi-subagents` package (`pi install npm:pi-subagents`) if the user installs it.
-- Headless: `pi -p "<prompt>" --model <provider/id> --thinking <off|minimal|low|medium|high|xhigh|max>`; `--mode json` for events; `--tools <allowlist>` to restrict tools; `--approve` trusts project-local files for one run.
+- Headless: `(cd <worktree> && pi -p "$(cat <abs packet>)" --model <provider/id> --thinking <off|minimal|low|medium|high|xhigh|max> > <abs report>)`; stdout holds the final message in text mode (capture UNVERIFIED on this machine); `--mode json` emits events instead; `--tools <allowlist>` restricts tools; `--approve` trusts project-local files for one run.
 - Install from Git: `pi install git:github.com/<owner>/<repo>` (private-repo auth UNVERIFIED — clone with `gh` and use `--skill <path>` or copy into `~/.agents/skills/` instead).
 
 ### Gemini CLI
@@ -97,7 +99,7 @@ Invocation: Claude Code `/heimdall` (plugin: `/heimdall:heimdall`); Codex `$heim
 
 ### Antigravity CLI (`agy`)
 
-- Headless: `agy -p "<prompt>" --model <id> --effort <low|medium|high|xhigh|max> --mode <accept-edits|plan|auto> --output-format json`. `--dangerously-skip-permissions` only on explicit request.
+- Headless: `(cd <worktree> && agy -p "$(cat <abs packet>)" --model <id> --effort <low|medium|high|xhigh|max> --mode <accept-edits|plan|auto> > <abs report>)`; text mode on stdout (capture UNVERIFIED on this machine); `--output-format json` emits structured output instead. `--dangerously-skip-permissions` only on explicit request.
 - Plugins: `agy plugin install <target>`, `agy plugin validate`. Skill directories UNVERIFIED — install into `~/.agents/skills/` and check with the CLI.
 
 ### Qwen Code
@@ -108,7 +110,7 @@ Invocation: Claude Code `/heimdall` (plugin: `/heimdall:heimdall`); Codex `$heim
 
 ### Mistral Vibe
 
-- Headless `vibe --prompt …` auto-approves when `--agent` is omitted and disables `ask_user_question`. Always pass `--agent plan` (review packets) or `--agent accept-edits` (build packets).
+- Headless `(cd <worktree> && vibe --prompt "$(cat <abs packet>)" --agent <agent> > <abs report>)` (capture UNVERIFIED on this machine). `vibe --prompt` auto-approves when `--agent` is omitted and disables `ask_user_question`. Always pass `--agent plan` (review packets) or `--agent accept-edits` (build packets).
 - Never set a custom system prompt for Heimdall (it replaces Vibe's default); rely on AGENTS.md and the skill.
 
 ### Grok Build (beta)

@@ -21,11 +21,11 @@ Runs every gate and the scheduler (execution-loop.md). It writes packets from th
 
 ## Researcher
 
-Answers one research question per dispatch (project-research.md): discovery at G0, architecture options at G2, library and integration details for tickets. It uses documentation lookup (Context7 or the vendor's docs), web search, the repository, and time-boxed spikes in a scratch location, and returns a digest (assets/research-digest.md) with sources, retrieval dates, and a confidence level. Several researchers run in parallel; the orchestrator merges their digests into one decision brief. A researcher never decides for the user: it recommends.
+Answers one research question per dispatch (project-research.md): discovery at G0, architecture options at G2, library and integration details for tickets. It uses documentation lookup (Context7 or the vendor's docs), web search, the repository, and time-boxed spikes in a scratch location, and returns a digest (assets/research-digest.md) with sources, retrieval dates, and a confidence level. Several researchers run in parallel; the orchestrator merges their digests into one decision brief. A researcher never decides for the user: it recommends. Packet: assets/research-packet.md (role researcher).
 
 ## Scout
 
-Optional. At G0.5 it maps a brownfield repository into the Repo Report (assets/repo-report.md, at most 30 lines). During the loop it can pre-read the code areas a group of tickets will touch and save notes to `.heimdall/research/`, so coders implement instead of exploring; packets then point to those notes.
+Optional. At G0.5 it maps a brownfield repository into the Repo Report (assets/repo-report.md, at most 30 lines). During the loop it can pre-read the code areas a group of tickets will touch and save notes to `.heimdall/research/`, so coders implement instead of exploring; packets then point to those notes. Packet: assets/research-packet.md (role scout).
 
 ## Coder
 
@@ -53,12 +53,12 @@ The orchestrator performs clean merges itself. A merger agent is dispatched only
 
 ## QA agent
 
-At G6, exercises the integrated application against the spec's success criteria and runs the review lenses on the whole build: security (secrets, dependency audit, input validation), performance, UX, accessibility, documentation, release readiness. Every finding becomes a ticket that goes through the same loop.
+At G6, exercises the integrated application against the spec's success criteria and runs the review lenses on the whole build: security (secrets, dependency audit, input validation), performance, UX, accessibility, documentation, release readiness. Every finding becomes a ticket that goes through the same loop. Packet: assets/qa-packet.md (two parts: the whole-build review and the QA run).
 
 ## Communication protocol
 
 - **Down:** a packet with context pointers (absolute paths, issue numbers, SHAs) and the exact report format.
-- **Up:** the agent's final message is its report. Its first line is a status token the orchestrator can parse: `STATUS: DONE`, `STATUS: BLOCKED: <touch-set | seam | spec | environment | dependency | secret | destructive>`, `STATUS: FAILED`, `VERDICT: APPROVE`, `VERDICT: CHANGES_REQUESTED`, `VERDICT: STALE` (head moved after the packet was written), `MERGE: MERGED-READY`, `MERGE: SEMANTIC-CONFLICT`, or `RESEARCH: DONE`.
+- **Up:** the agent's final message is its report. Its first line is a status token the orchestrator can parse: `STATUS: DONE`, `STATUS: BLOCKED: <touch-set | seam | spec | environment | dependency | secret | destructive>`, `STATUS: FAILED`, `VERDICT: APPROVE`, `VERDICT: CHANGES_REQUESTED`, `VERDICT: STALE` (head moved after the packet was written), `MERGE: MERGED-READY`, `MERGE: SEMANTIC-CONFLICT`, `RESEARCH: DONE`, or `QA: DONE` / `QA: BLOCKED: environment`.
 - **Sideways:** none. Agents never message each other; shared knowledge lives in files and the tracker.
 - **To the user:** never. Subagents and headless runs cannot ask questions reliably (harness-adapters.md); they stop and report, and the orchestrator asks.
 

@@ -13,9 +13,12 @@ Current: <gate, or "build loop">
 Progress report: .heimdall/PROGRESS.md and progress.html, refreshed <YYYY-MM-DD> at <gate or wave>
 
 ## Tickets
-| T | # | Title | Status | Tier | Touch set | Blocked by | Agent / round | PR | Merged |
-|---|---|---|---|---|---|---|---|---|---|
-| T01 | <n> | <scaffold> | <ready> | <Standard> | <all; deps, config> | — | — | — | — |
+| T | # | Title | Status | Tier | Touch set | Blocked by | Agent / round / retries | Head | PR | Merged |
+|---|---|---|---|---|---|---|---|---|---|---|
+| T01 | <n> | <scaffold> | <ready> | <Standard> | <all; deps, config> | — | — | — | — | — |
+
+<!-- Head: the guarded head (merge-protocol.md, L6) — the pushed head under review, the approved head, or the
+     update-merge head. Round increments on a review verdict; retries count executor failures in the same round. -->
 
 In flight: <T03 coder r1 (subagent id), T04 review r1, …, or "none">
 Merge queue: <T02, or "empty">
