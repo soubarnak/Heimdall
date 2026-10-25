@@ -1,6 +1,6 @@
 # Tracker — Gitea (`tea`)
 
-Implements the tracker contract in execution-loop.md, section 2. Verified 2026-10-25 against `tea` 0.16.0, Gitea 1.27.1, and docs.gitea.com. Run commands inside the project clone so `tea` discovers the login and repository from the remote (or pass `--repo owner/repo` and `--login <name>`). Never print or store tokens; authentication is the user's `tea login add`.
+Implements the tracker contract in execution-loop.md, section 2. Verified 2026-10-25 against `tea` 0.16.0, Gitea 1.27.1, and docs.gitea.com; the comment-edit, snapshot, and repository-creation commands added 2026-10-26 were checked against `tea` 0.16.0 `--help` and the Gitea SDK documentation (Context7: `EditIssueComment` is `PATCH /repos/{owner}/{repo}/issues/comments/{id}`) but not run against an instance (UNVERIFIED in use). Run commands inside the project clone so `tea` discovers the login and repository from the remote (or pass `--repo owner/repo` and `--login <name>`). Never print or store tokens; authentication is the user's `tea login add`.
 
 `tea api <endpoint>` prefixes `/api/v1/` and fills `{owner}` and `{repo}` from the current repository. A body via `-f` / `-F` / `-d` makes the method POST by default. Quote endpoints that contain `?` or `&`.
 
@@ -11,14 +11,22 @@ tea login list                                   # a login for this host must ex
 tea api /repos/{owner}/{repo} | jq '{default_branch, has_issues, has_pull_requests, internal_tracker}'
 ```
 
-`internal_tracker.enable_issue_dependencies` tells you whether native blocking edges work. Instances can disable dependencies; then use the body fallback below. Gitea has no sub-issues: group tickets with a milestone and a `Part of #<spec>` line.
+A repository with no commits yet has no branch: the bootstrap commit at G3 creates the first one. `internal_tracker.enable_issue_dependencies` tells you whether native blocking edges work. Instances can disable dependencies; then use the body fallback below. Gitea has no sub-issues: group tickets with a milestone and a `Part of #<spec>` line.
+
+No remote yet (greenfield, calibration.md, section 4): offer a new private repository and create it only on the user's yes:
+
+```bash
+tea repos create --name <name> --private        # no --init: the local repository already has history or will get the bootstrap commit
+git remote add origin <clone url from the output>
+```
 
 ## Setup (G3, once per build)
 
 ```bash
 for l in "heimdall:spec|#5319e7" "heimdall:ready|#0e8a16" "heimdall:in-progress|#fbca04" \
          "heimdall:in-review|#1d76db" "heimdall:changes-requested|#d93f0b" \
-         "heimdall:approved|#0e8a16" "heimdall:needs-human|#b60205" "heimdall:prefactor|#c5def5"; do
+         "heimdall:approved|#0e8a16" "heimdall:needs-human|#b60205" "heimdall:prefactor|#c5def5" \
+         "heimdall:acceptance|#bfd4f2"; do
   tea labels create --name "${l%%|*}" --color "${l##*|}"
 done
 tea milestones create --title "<milestone title>" --description "<goal>"
@@ -32,10 +40,20 @@ tea milestones create --title "<milestone title>" --description "<goal>"
 tea issues create --title "Spec: <project>" --labels heimdall:spec --description-file .heimdall/spec.md
 ```
 
-Progress report (production-orchestrator.md, section 6), one comment per refresh:
+Progress report and state snapshot (production-orchestrator.md, sections 5 and 6), from G3 on: each is one comment, created once and then edited in place. Record each comment id in STATE.md (Tracker comments). The first line of each file is its marker — `<!-- heimdall:progress -->` or `<!-- heimdall:snapshot -->` — so a new machine can find the comments.
 
 ```bash
-tea comment <spec#> "$(cat .heimdall/PROGRESS.md)"
+tea api -X POST '/repos/{owner}/{repo}/issues/<spec#>/comments' -F body=@.heimdall/PROGRESS.md | jq .id   # create once: prints the id
+tea api -X PATCH '/repos/{owner}/{repo}/issues/comments/<id>' -F body=@.heimdall/PROGRESS.md              # every later refresh
+```
+
+The same two commands post `.heimdall/snapshot.md` (or its two parts when it is split).
+
+Rebuild on a machine without `.heimdall/` (production-orchestrator.md, section 5):
+
+```bash
+tea issues list --state all --labels heimdall:spec -o json
+tea api '/repos/{owner}/{repo}/issues/<spec#>/comments' | jq '.[] | select(.body | startswith("<!-- heimdall:snapshot")) | {id, body}'
 ```
 
 ## Tickets
@@ -43,10 +61,10 @@ tea comment <spec#> "$(cat .heimdall/PROGRESS.md)"
 Create in dependency order (blockers first):
 
 ```bash
-# the issue body: the draft without its H1 and its local status lines; "Part of #<spec>" is then the first line
-sed -e '1{/^# /d}' -e '/^Status:/d' -e '/^Claimed by:/d' -e '/^Merged:/d' .heimdall/tickets/T<nn>-<slug>.md \
-  | sed -e '1{/^$/d}' > .heimdall/tickets/T<nn>-<slug>.body.md
-tea issues create --title "<ticket title>" --labels heimdall:ready \
+# the issue body: the draft without its template comment, its H1, and its local status lines; "Part of #<spec>" is then the first line
+awk 'NR==1 && /^<!--/ {skip=1} skip { if (/-->/) skip=0; next } !h && /^# / {h=1; next} /^(Status|Claimed by|Merged):/ {next} {print}' \
+  .heimdall/tickets/T<nn>-<slug>.md | sed '/./,$!d' > .heimdall/tickets/T<nn>-<slug>.body.md
+tea issues create --title "<ticket title>" --labels heimdall:ready[,heimdall:prefactor | ,heimdall:acceptance] \
   --milestone "<milestone title>" --description-file .heimdall/tickets/T<nn>-<slug>.body.md
 ```
 

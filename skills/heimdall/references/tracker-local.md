@@ -11,13 +11,14 @@ Implements the tracker contract in execution-loop.md, section 2, for projects wi
 .heimdall/tickets/T<nn>-<slug>.md          one file per ticket, numbered in dependency order (blockers first)
 .heimdall/reports/T<nn>-coder-<round>.md   coder return reports
 .heimdall/reports/T<nn>-review-<round>.md  review verdicts
+.heimdall/reports/T<nn>-checks-<round>.md  ticket checks (execution-loop.md, section 5)
 ```
 
 Each ticket file (assets/ticket.md) starts with a status block:
 
 ```
 Status: ready | in-progress | in-review | changes-requested | approved | closed | needs-human
-Kind: feature | prefactor | bug | env
+Kind: feature | prefactor | bug | env | acceptance
 Milestone: <milestone title>
 Blocked by: T03, T05            (or "none")
 Branch: heimdall/t<nn>-<slug>
@@ -32,7 +33,8 @@ Merged: <merge sha>             (empty until closed)
 | Preflight | `git rev-parse --show-toplevel` succeeds; the working tree is clean |
 | Setup | create `.heimdall/tickets/`, `.heimdall/packets/`, and `.heimdall/reports/`; add `.heimdall/` to `.git/info/exclude` |
 | Spec issue | `.heimdall/spec.md` |
-| Progress report | `.heimdall/PROGRESS.md` and `.heimdall/progress.html`; nothing is posted |
+| Progress report | `.heimdall/PROGRESS.md` at every refresh, `.heimdall/progress.html` when production-orchestrator.md, section 6 says so; nothing is posted |
+| State snapshot | none: `.heimdall/` is the only copy. At G3 tell the user so and recommend backing it up with the project (for example `tar czf heimdall-state-<date>.tgz .heimdall` kept outside the repository) |
 | Tickets | write `T<nn>-<slug>.md` from assets/ticket.md with `Status: ready` |
 | Blocking edges | the `Blocked by:` line |
 | Frontier query | `Status: ready`, every `Blocked by` ticket `closed`, touch set free (merge-protocol.md, L3) |

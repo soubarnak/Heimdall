@@ -4,8 +4,9 @@ Run before any other work, on the first message of a session that invokes Heimda
 
 ## 1. Resume check
 
-- Agent profile: if `.heimdall/STATE.md` exists in the project, this is a resumed build. Follow the resume protocol (production-orchestrator.md, section 5) and skip the rest of this file except section 6.
+- Agent profile: if `.heimdall/STATE.md` exists in the project, this is a resumed build. Run sections 2–4 as usual (detection only), skip the question in section 5, then follow the resume protocol (production-orchestrator.md, section 5): it compares what you detected with the recorded profile, applies the tier rules to the model running now, and migrates STATE.md. Section 6 updates the profile in STATE.md.
 - Chat profile: if the message contains a pasted STATE.md, the same applies.
+- A repository with a GitHub or Gitea remote but no `.heimdall/` folder may be a build started on another machine: look for an open issue labelled `heimdall:spec` (`gh issue list --label heimdall:spec` / `tea issues list --labels heimdall:spec`). If one exists, it is a resumed build (the resume protocol rebuilds `.heimdall/` from it).
 
 ## 2. Detect the harness and profile
 
@@ -38,6 +39,7 @@ Run cheap, read-only checks. Never read or print credential files or token value
 
 ```bash
 git rev-parse --show-toplevel 2>/dev/null && git remote get-url origin 2>/dev/null
+git config user.name >/dev/null && git config user.email >/dev/null && echo "git identity set"   # presence only
 for c in claude codex muse opencode pi agy gemini qwen vibe grok kimi gh tea podman chromium chromium-browser google-chrome; do command -v "$c" >/dev/null && echo "$c"; done
 gh auth status 2>&1 | head -3        # signed-in account only
 tea login list 2>/dev/null           # login names and hosts only
@@ -45,6 +47,11 @@ ls AGENTS.md CLAUDE.md .heimdall 2>/dev/null
 ```
 
 These answers decide: greenfield or brownfield, the tracker candidates (execution-loop.md, section 2), and which harnesses can serve as headless coders, reviewers, or researchers in the topology (agent-roles.md). A headless-capable browser (Chromium or Chrome, or the harness's own browser tool) lets the progress report carry screenshots of the design screens; without one, the report embeds the HTML screens instead.
+
+- **No repository:** an empty folder or loose files. Greenfield; G0 runs `git init -b main` (production-orchestrator.md, G0).
+- **No git identity:** the bootstrap commit at G3 would fail. G0 asks the user to set one for this repository; never set it yourself.
+- **No remote:** the local tracker, unless the user accepts the G2 offer of a new private repository.
+- **The instructions already loaded in this session** (user-level and project-level instruction files such as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, or the project's AGENTS.md) may fix models, effort, or which agent handles which kind of work. They override Heimdall's defaults: build the topology within them and record each override in STATE.md's Topology line (for example "coders: user rule → Sonnet at medium"). Headless runs load the same user-level files.
 
 ## 5. The one calibration question (only if needed)
 

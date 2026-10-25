@@ -1,16 +1,17 @@
-<!-- Heimdall ticket template (references/execution-loop.md, G3).
+<!-- Heimdall ticket template (references/production-orchestrator.md, G3).
      Remote trackers: the title becomes the issue title; the issue body is built from this file by the tracker file's
-     `sed` line (drop the H1 and the Status, Claimed by, and Merged lines, so `Part of #<spec>` is the first line);
-     the spec issue exists before any ticket is published. Local tracker: keep everything (references/tracker-local.md).
-     No file paths (they live in HANDOFF.md's module map) and no code, except a decision-rich prototype snippet. -->
+     body builder (it drops this comment, the H1, and the Status, Claimed by, and Merged lines, so `Part of #<spec>` is
+     the first line); the spec issue exists before any ticket is published. Local tracker: keep everything
+     (references/tracker-local.md). No file paths (they live in HANDOFF.md's module map) and no code, except a
+     decision-rich prototype snippet. -->
 
 # T<nn>: <ticket title>
 
 Part of #<spec issue>   <!-- remote trackers: first body line; on GitHub, --parent also links it -->
 
 Status: ready
-Kind: <feature | prefactor | bug | env>
-Covers: <US-01, US-03 | none (scaffold, env, prefactor)>
+Kind: <feature | prefactor | bug | env | acceptance>
+Covers: <US-01, US-03 | SC-2 (acceptance tickets) | none (scaffold, env, prefactor)>
 Screen: <prototype screen file, e.g. .heimdall/design/prototype/today.html — UI tickets only | n/a>
 Milestone: <milestone title>
 Blocked by: <T03, T05 | none>

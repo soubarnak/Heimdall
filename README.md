@@ -131,23 +131,24 @@ Heimdall first calibrates: it detects the harness, the model, and the tools avai
 | G1 Spec | the spec with user stories and success criteria, its grade, the operating mode, and a briefing | **sign off**, or ask for changes |
 | G2 Architecture | decision blocks with recommendations, ADRs, test seams, the tracker, the agent topology, the standing authorization, a setup packet, and a briefing | **sign off**; do the briefing's "What you need to do" items (accounts, keys set by name) |
 | G2.5 Design (UI builds) | 2–3 mockups of the key screen, then a prototype of the core screens in the direction you picked | pick one; confirm the prototype |
-| G3 Tickets | a numbered ticket list with dependencies and waves | confirm; Heimdall publishes the tickets and makes the bootstrap commit |
-| G4–G5 Build loop | tracker updates and progress reports | nothing, unless it stops for you |
-| G6 QA | a whole-build review and QA findings as new tickets | confirm (sign off in Production) |
-| G7 Ship | the release steps and an operations handover briefing | **sign off**, and approve each deploy, tag, publish, or merge to your default branch |
+| G3 Tickets | a numbered ticket list with dependencies and waves, including one end-to-end acceptance test per success criterion | confirm; Heimdall publishes the tickets and makes the bootstrap commit |
+| G4–G5 Build loop | tracker updates, progress reports, and one demo once the first user journey works | nothing, unless it stops for you; try the demo and say what feels wrong |
+| G6 QA | the acceptance tests, a whole-build review, and QA findings as new tickets; failing criteria are re-checked at most twice before you decide | confirm (sign off in Production) |
+| G7 Ship | a release packet (preflight, configuration by name, release steps, smoke test, rollback plan, monitoring) and an operations handover briefing | **sign off**, and approve each deploy, tag, publish, or merge to your default branch |
 
-A sign-off counts only when you give it after seeing the gate's artifacts. "Just build it" or "run all the gates" does not lock G1, G2, or G7: Heimdall stops there, shows the briefing with its recommended answers, and waits.
+At G1 and G2 Heimdall shows the artifacts first and then asks one question whose recommended answer is "accept every recommendation as shown"; settings most people have no view on (merge path, worktree location, concurrency) are listed under "Advanced: change any of these". A sign-off counts only when you give it after seeing the gate's artifacts. "Just build it" or "run all the gates" does not lock G1, G2, or G7: Heimdall stops there, shows the briefing with its recommended answers, and waits.
 
 ### Watching progress
 
 - **Tracker:** one issue per ticket under a spec issue. Labels move from `heimdall:ready` to `heimdall:in-progress`, `heimdall:in-review`, and `heimdall:approved` or `heimdall:changes-requested`; a closed ticket carries its merge commit, and `heimdall:needs-human` marks a ticket waiting on you. Each ticket has one pull request with the coder's test-first evidence and the reviewer's verdict.
-- **Progress report:** `.heimdall/progress.html` (open it in a browser) and `.heimdall/PROGRESS.md`. It shows the gate flow, what works so far, the build graph by wave, the chosen design with its mockups and prototype screens, what was done since the last report, and the proposed next phase. Heimdall refreshes it at every gate lock, after each merged wave, and whenever it stops for you, and, with GitHub or Gitea, posts the Markdown version as a comment on the spec issue. Say "Show progress" to refresh it at any time.
+- **Progress report:** `.heimdall/PROGRESS.md` shows the gate flow, what works so far, the build graph by wave, the chosen design with its prototype screens, what was done since the last report, the proposed next phase, and, once the first journey works, how to try it. Heimdall refreshes it at every gate lock, after each merged wave, and whenever it stops for you. With GitHub or Gitea it posts the report from G3 on as one comment on the spec issue and edits that comment in place. `.heimdall/progress.html` (open it in a browser; it embeds the mockups and prototype screens) is written at the design gate, at G7, and whenever you say "Show progress".
 - **State:** `.heimdall/STATE.md` holds the ticket table, the work in flight, health counters, and the next action.
 
 ### When Heimdall stops for you
 
 - **Questions from the build** (`needs-human`) are collected across tickets and asked together, at most 4 per message, each with a recommended answer. In an unattended run the other tickets keep moving; Heimdall stops only when nothing else can.
-- **Health check:** when 2 of the last 4 merged tickets needed retries, a stronger model, or every allowed fix round, it pauses new work and reports the cause.
+- **Health check:** when 2 of the last 4 merged tickets needed retries, a stronger model, or every allowed fix round, it pauses new work and reports the cause. A ticket gets at most 2 rounds of review changes; rounds that repair a merge conflict with another ticket do not count against it.
+- **Demo:** once the first user journey works, Heimdall starts the application (or gives you the command) with three steps to try. A bug you find becomes a fix ticket; anything new becomes a change request. The rest of the build keeps going.
 - **Revision loop:** when the build shows that the architecture or the ticket graph is wrong, it brings you back to G2 or G3.
 - **Actions outside the standing authorization** (below) always wait for your go-ahead.
 
@@ -160,13 +161,14 @@ A sign-off counts only when you give it after seeing the gate's artifacts. "Just
 ### Pausing and resuming
 
 - Heimdall saves STATE.md at every gate lock and every ticket status change. Say "Checkpoint now" to save it immediately.
-- To resume, open a new session in the project — any harness, any model — and invoke Heimdall. It reads STATE.md, re-checks the environment, reconciles with the tracker (the tracker wins), and continues where it stopped.
+- To resume, open a new session in the project — any harness, any model — and invoke Heimdall. It reads STATE.md, re-checks the environment, reconciles with the tracker (the tracker wins), checks whether agents from the earlier session are still running, and continues where it stopped.
+- With GitHub or Gitea, Heimdall also keeps a snapshot of STATE.md and HANDOFF.md as one comment on the spec issue, so a fresh clone on another computer can resume. With local tickets, `.heimdall/` is the only copy: back it up with the project.
 - Start a fresh session after G2, after G3, and every few merges on a tight budget.
 - Do not switch the model or effort in the middle of a session. If you must, tell Heimdall so it recalibrates.
 
 ### What Heimdall does without asking
 
-At G2 you approve a standing authorization. With it, the build loop creates and labels issues, milestones, and comments; pushes `heimdall/*` branches and deletes them once merged; pushes the integration branch (the bootstrap commit and each merge); opens pull requests; merges approved pull requests into the integration branch; closes tickets; and reverts a breaking merge with a new commit.
+At G2 you approve a standing authorization (its full list lives in the skill's production-orchestrator.md, section 8). With it, the build loop creates and labels issues, milestones, and comments; pushes `heimdall/*` branches and deletes them once merged; pushes the integration branch (the bootstrap commit and each merge); opens pull requests; merges approved pull requests into the integration branch; closes tickets; and reverts a breaking merge with a new commit.
 
 Everything else waits for your explicit go-ahead, every time: force-pushes, deleting data or non-Heimdall branches, migrations without a backup, merging or pushing to the default branch when it is not the integration branch, deploying, tagging, publishing, changing repository settings, spending money, and sending messages. If you want to approve every push, say so: Heimdall then merges locally and pushes only at checkpoints you approve.
 
@@ -174,7 +176,7 @@ Secrets stay out of everything Heimdall writes. It names them ("set STRIPE_SECRE
 
 ### Rigor, size, and speed
 
-- **Operating mode** (chosen at G1): Prototype favors speed (G1 and G2 together, relaxed test-first rules); MVP is the default; Production adds full gates, a reviewer from a different model family when available, a red-at-base test check on every ticket, and a mandatory G6.
+- **Operating mode** (chosen at G1): Prototype favors speed (G1 and G2 together, relaxed test-first rules); MVP is the default; Production adds full gates, a reviewer from a different model family when available, and a mandatory G6. Every ticket gets mechanical checks before review (scope, lockfiles, commit order); in MVP and Production each feature and bug ticket's new tests also run against the code before the change, to prove they fail there.
 - **Build-lite:** for 1–3 tickets. G1 and G2 are signed off together, tickets default to local files, and one coder works at a time; it is still test-first and still reviewed.
 - **Parallelism:** up to 3 coders at once by default (up to 5 with a generous budget). Reviewers do not count toward the cap, and merges are always one at a time. Without subagents or a headless agent CLI, Heimdall works through tickets one by one.
 - **Tracker:** GitHub (`gh auth login`), Gitea (`tea login add`), or local files when neither is available.
@@ -185,6 +187,7 @@ Secrets stay out of everything Heimdall writes. It names them ("set STRIPE_SECRE
 ```
 .heimdall/                runtime state; listed in .git/info/exclude, never committed
   STATE.md                the resume point
+  ticket-checks.sh        the mechanical checks run before every review
   progress.html           the visual progress report; PROGRESS.md is the Markdown version
   spec.md  HANDOFF.md  DECISIONS.md
   research/  briefings/   research digests and your briefings
@@ -203,8 +206,9 @@ In a chat app without file tools (claude.ai, ChatGPT, Meta AI), Heimdall runs G0
 ```
 skills/heimdall/            the skill (copy or link this folder into a harness)
   SKILL.md                  entry point: calibration, routing, Build mode overview, global rules
-  references/               protocols loaded on demand (27 files)
-  assets/                   templates for specs, tickets, packets, reports, ADRs, briefings, state, progress report, QA, research, kickoff, AGENTS.md (23 files)
+  references/               protocols loaded on demand (32 files)
+  assets/                   templates for specs, tickets, packets, reports, ADRs, briefings, state, progress report, QA, release, research, kickoff, AGENTS.md (24 files)
+  scripts/ticket-checks.sh  the mechanical ticket checks, copied into each project at G3
 scripts/install.sh          installs the skill into every detected harness
 scripts/validate.sh         checks the skill format, index coverage, manifests, and secrets
 .claude-plugin/             Claude Code plugin and marketplace manifests

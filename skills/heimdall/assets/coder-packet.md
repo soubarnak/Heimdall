@@ -22,7 +22,7 @@ You are a coder in a multi-agent build. You implement exactly one ticket, test-f
 - Research notes: <absolute paths, or "none">
 - Design (UI tickets): HANDOFF Design Contract; the screen to implement is <absolute path to .heimdall/design/prototype/<screen>.html, or "n/a">. Match its layout, flow, copy, and states; take a screenshot for the report when a browser or screenshot tool is available, otherwise describe any deviation.
 - Review to address (fix rounds only): <absolute path to .heimdall/reports/T<nn>-review-<r-1>.md, or, after a merge conflict or a reverted merge, .heimdall/reports/T<nn>-merge.md; or "none">
-- Orchestrator note (re-dispatch only): <"sync with the integration tip and report again" | "revert the changes outside the touch set, or report BLOCKED: touch-set" | "none">
+- Orchestrator note (re-dispatch only; references/execution-loop.md, section 5, step 6): <"commit everything, sync with the integration tip, and report again" | "revert the changes outside the touch set, or report BLOCKED: touch-set with the reason" | "restore the lockfile with the command in the checks report (<path>); your Install command must not rewrite it" | "uncommitted changes from an interrupted run: review them, keep what is right, commit, continue" | "none">
 </context>
 
 <touch_set>
@@ -34,19 +34,20 @@ If the ticket cannot be finished without changing anything else, stop and report
 </touch_set>
 
 <tdd>
-First, in the worktree, run the Install command from HANDOFF.md (`<…>`): a fresh worktree has no installed dependencies. When HANDOFF defines a full-suite command (T01 creates it), run it once and expect green; if it is red before you change anything, stop and report `STATUS: BLOCKED: environment` with the output.
+First, in the worktree, run the Install command from HANDOFF.md (`<…>`): a fresh worktree has no installed dependencies. It is a frozen install and must not change any lockfile; if a lockfile changed anyway and you do not hold the `deps` hotspot, restore it (`git restore --source=<base sha> -- <lockfile>`) and never commit it. When HANDOFF defines a full-suite command (T01 creates it), run it once and expect green; if it is red before you change anything, stop and report `STATUS: BLOCKED: environment` with the output.
 Build test-first, one behavior at a time:
 1. Write one test for the next behavior, at a seam listed in the ticket, through the public interface only.
-2. Run that test file and see it fail because the behavior is missing (not a typo, import, or setup error). Commit: `test(T<nn>): <behavior>`.
+2. Run that test file and see it fail because the behavior is missing. Failing because a module or function this ticket will create does not exist yet counts; a typo, a wrong path to existing code, or a setup error does not. Commit: `test(T<nn>): <behavior>`.
 3. Write the minimum code to pass. Run the test file; run the type checker. Commit: `feat(T<nn>): <behavior>`.
 4. Repeat for every acceptance criterion. Record each red failure message for the report.
+<!-- Acceptance tickets (kind acceptance): replace steps 1–4 with "Write one end-to-end test per criterion with the End-to-end command, driving the running application as a user would; it should pass, because the implementing tickets are merged. A failing acceptance test is a finding: commit the test, report `STATUS: BLOCKED: spec` with `acceptance failure: SC-<n>` and the failing output; do not change product code." -->
 Never: mock your own modules (mock only external services, time, randomness), test private internals or call counts, compute expected values the way the code does, or write all tests before any code. Refactor only in a review fix round, with tests green before and after. A test at a seam not listed in the ticket needs approval: stop and report `STATUS: BLOCKED: seam` with the proposed interface.
 </tdd>
 
 <finish>
 1. Merge the integration tip: `git merge --no-edit <integration-branch>`. Resolve only conflicts inside your touch set; otherwise `git merge --abort` and report `STATUS: BLOCKED: dependency`. If the merge changed a dependency manifest or lockfile, run the Install command. Record the integration SHA you merged (`git rev-parse <integration-branch>`) as `Synced with` in the report.
 2. Run the full suite, the type checker, and the linter with the commands in HANDOFF.md. Everything green.
-3. `git status` is clean; every change is committed on `heimdall/t<nn>-<slug>`.
+3. `git status` is clean; every change is committed on `heimdall/t<nn>-<slug>`. The orchestrator checks the head, the base, the scope, lockfiles, the commit order, and runs your new tests against the base code before review.
 4. Your final message is the return report below and nothing else.
 </finish>
 

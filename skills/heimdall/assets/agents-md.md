@@ -11,14 +11,14 @@
 
 | Task | Command |
 |---|---|
-| Install | `<…>` |
+| Install (frozen: never rewrites the lockfile) | `<…>` |
 | Run (dev) | `<…>` |
 | Build | `<…>` |
 | One test file | `<…>` |
 | Full suite | `<…>` |
 | Type-check | `<…>` |
 | Lint / format | `<…>` |
-| End-to-end | `<…>` |
+| End-to-end (acceptance tests: one per Success Criterion) | `<…>` |
 | Services (podman) | `<podman compose up -d, or "none">` |
 
 ## Module map
@@ -39,7 +39,7 @@ Modules talk through their public interfaces only. Shared hotspots (dependencies
 ## How to work here
 
 - **Test-first at the seams.** Every behavior change starts with a failing test at a public interface listed above: one behavior per test, through the public API, doubles only at system boundaries (external services, time, randomness). Commit the failing test (`test(T<nn>): …`) before the code that makes it pass (`feat(T<nn>): …`).
-- **One ticket, one branch, one worktree.** Branches are `heimdall/t<nn>-<slug>`; change only the ticket's touch set; stop and report when you need more.
+- **One ticket, one branch, one worktree.** Branches are `heimdall/t<nn>-<slug>`; change only the ticket's touch set; stop and report when you need more. Only the ticket that holds the dependencies hotspot changes a lockfile; anyone else restores it (`git restore --source=<base> -- <lockfile>`).
 - **Decisions are recorded, not re-litigated:** `docs/adr/` holds the architecture decisions; a change is a new ADR that supersedes the old one.
 - **Never** push to `<integration-branch>` directly, force-push, delete branches, run destructive commands, deploy, or spend money. The orchestrator merges.
 

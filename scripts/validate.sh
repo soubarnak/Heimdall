@@ -133,18 +133,30 @@ if body_lines:
     else:
         p("PASS", f"SKILL.md body {n} lines")
 
-# 4. every references/*.md mentioned in SKILL.md
+# 4. every file in references/, assets/, and scripts/ mentioned in SKILL.md; one level deep
 ref_dir = os.path.join(skill_dir, "references")
 asset_dir = os.path.join(skill_dir, "assets")
-refs = sorted(f for f in os.listdir(ref_dir) if f.endswith(".md")) if os.path.isdir(ref_dir) else []
-assets = sorted(f for f in os.listdir(asset_dir) if f.endswith(".md")) if os.path.isdir(asset_dir) else []
+skill_scripts_dir = os.path.join(skill_dir, "scripts")
+def files_in(d):
+    return sorted(f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))) if os.path.isdir(d) else []
+refs = [f for f in files_in(ref_dir) if f.endswith(".md")]
+asset_files = files_in(asset_dir)
+assets = [f for f in asset_files if f.endswith(".md")]
+skill_scripts = files_in(skill_scripts_dir)
+repo_scripts = files_in(os.path.join(root, "scripts"))
+for d in (ref_dir, asset_dir, skill_scripts_dir):
+    if os.path.isdir(d):
+        subs = sorted(x for x in os.listdir(d) if os.path.isdir(os.path.join(d, x)))
+        for x in subs:
+            p("FAIL", f"{rel(d)}/{x} is a subdirectory (keep these folders one level deep)")
 if os.path.isfile(skill_md):
     st = open(skill_md, encoding="utf-8").read()
-    missing = [f for f in refs if f not in st]
-    for f in missing:
-        p("FAIL", f"references/{f} not mentioned in SKILL.md")
-    if not missing:
-        p("PASS", f"all {len(refs)} reference files listed in SKILL.md")
+    for kind, names in (("references", refs), ("assets", asset_files), ("scripts", skill_scripts)):
+        missing = [f for f in names if f not in st]
+        for f in missing:
+            p("FAIL", f"{kind}/{f} not mentioned in SKILL.md")
+        if not missing:
+            p("PASS", f"all {len(names)} {kind} files listed in SKILL.md")
 
 # 5. dangling .md references
 known = set(refs) | set(assets) | {"SKILL.md"}
@@ -180,6 +192,24 @@ for path in sorted(md_files):
             dangling += 1
 if not dangling:
     p("PASS", "no dangling .md references")
+
+# 5b. dangling assets/ and scripts/ paths (any extension), in skill files of any text type
+ptok = re.compile(r"(?<![A-Za-z0-9_./-])(assets|scripts)/([A-Za-z0-9_-]+(?:\.[A-Za-z0-9]+)+)")
+pdangling = 0
+for dp, dn, fn in os.walk(skill_dir):
+    for f in fn:
+        if not f.endswith((".md", ".html", ".sh")):
+            continue
+        path = os.path.join(dp, f)
+        for i, ln in enumerate(open(path, encoding="utf-8").read().split("\n"), 1):
+            for m in ptok.finditer(ln):
+                kind, name = m.group(1), m.group(2)
+                ok = name in asset_files if kind == "assets" else (name in skill_scripts or name in repo_scripts)
+                if not ok:
+                    p("FAIL", f"dangling path {kind}/{name} at {rel(path)}:{i}")
+                    pdangling += 1
+if not pdangling:
+    p("PASS", "no dangling assets/ or scripts/ paths")
 
 # 6. whole-line backtick-wrapped prose
 wrapped = 0
@@ -220,6 +250,16 @@ if pj_data is not None:
         p("FAIL", f"plugin.json version {pv!r} != SKILL.md metadata.version {version!r}")
     else:
         p("PASS", f"plugin.json version == SKILL.md version ({version})")
+
+# 7b. CHANGELOG has an entry for the current version
+cl = os.path.join(root, "CHANGELOG.md")
+if version is not None:
+    if not os.path.isfile(cl):
+        p("FAIL", "CHANGELOG.md missing")
+    elif re.search(r"^## " + re.escape(version) + r"\b", open(cl, encoding="utf-8").read(), re.M):
+        p("PASS", f"CHANGELOG.md has a {version} entry")
+    else:
+        p("FAIL", f"CHANGELOG.md has no '## {version}' entry")
 
 # 8. secret scan (reports file:line and pattern name only)
 pats = {

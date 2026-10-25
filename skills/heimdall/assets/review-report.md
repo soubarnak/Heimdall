@@ -1,7 +1,7 @@
 VERDICT: <APPROVE | CHANGES_REQUESTED | STALE>
 REVIEW — T<nn> <ticket title> — round <r> — head <sha>
 Reviewer: <harness> / <model> / effort <level>   Coder family: <family>
-Checks: full suite <command> → <result>; type-check → <result>; red-at-base → <failed as expected | passed (finding) | skipped: reason>
+Checks: full suite <command> → <result>; type-check → <result>; ticket checks → <first line of the checks report>; red-at-base → <RED, judged real | RED, but a setup failure (for the orchestrator) | NO-RED (finding unless characterization) | SETUP-ERROR | SKIPPED: reason | not run: no test files (NO-TESTS)>
 
 ## Spec
 - [blocking] <finding> — "<quoted ticket or spec line>" — <file:line>

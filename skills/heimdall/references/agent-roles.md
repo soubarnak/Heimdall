@@ -35,13 +35,13 @@ Implements exactly one ticket, test-first (tdd-protocol.md), inside its touch se
 
 ## Reviewer
 
-Reviews one ticket at one head SHA in a fresh context, along five separate axes, and returns APPROVE or CHANGES_REQUESTED (assets/review-report.md). It may run tests, check out scratch worktrees for the red-at-base check, and read the code, the ticket, the spec, and HANDOFF. It must leave `git status` clean in the ticket's worktree. Packet: assets/review-packet.md.
+Reviews one ticket at one head SHA in a fresh context, along five separate axes, and returns APPROVE or CHANGES_REQUESTED (assets/review-report.md). It may run the test runner and read-only git commands, and read the code, the ticket, the spec, HANDOFF, and the orchestrator's checks report (`.heimdall/reports/T<nn>-checks-<round>.md`: head, clean tree, base, scope, lockfile drift, commit order, red-at-base). It runs no scripts and creates no worktrees. It must leave `git status` clean in the ticket's worktree. Packet: assets/review-packet.md.
 
 - **Spec:** requirements missing or partial, behavior not asked for (scope creep), requirements implemented wrongly. Quote the ticket or spec line.
-- **Standards:** violations of the repo's documented standards (cite file and rule), plus the smell baseline from Matt Pocock's `code-review` skill (Fowler, *Refactoring*, ch. 3) — Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest. Smells are always judgement calls; a documented repo standard overrides the baseline; skip what tooling enforces.
-- **TDD audit:** tdd-protocol.md, sections 3 and 6.
+- **Standards:** violations of the repo's documented standards (cite file and rule), plus the smell baseline from Matt Pocock's `code-review` skill (Fowler, *Refactoring*, ch. 3) — the single source of this list; the orchestrator pastes it into review and QA packets — Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest. Smells are always judgement calls; a documented repo standard overrides the baseline; skip what tooling enforces.
+- **TDD audit:** tdd-protocol.md, sections 3, 6, and 8, judged from the commit list, the checks report, and the code.
 - **Security:** secrets in code or history, input validation at trust boundaries, injection, authentication and authorization checks, unsafe dependencies.
-- **Scope:** only touch-set paths changed; nothing outside the ticket.
+- **Scope:** only touch-set paths changed (the checks report's scope line); nothing outside the ticket.
 
 Blocking findings: any Spec finding, hard Standards violations, TDD anti-patterns or missing red-first evidence (MVP and Production), any Security finding, any Scope finding. Smells are non-blocking unless they make the change wrong or unmaintainable; non-blocking findings go to the G6 cleanup list.
 
@@ -53,7 +53,7 @@ The orchestrator performs clean merges itself. A merger agent is dispatched only
 
 ## QA agent
 
-At G6, exercises the integrated application against the spec's success criteria and runs the review lenses on the whole build: security (secrets, dependency audit, input validation), performance, UX, accessibility, documentation, release readiness. Every finding becomes a ticket that goes through the same loop. Packet: assets/qa-packet.md (two parts: the whole-build review and the QA run).
+At G6, runs the acceptance tests (one per Success Criterion), exercises the integrated application against each criterion itself (browser, HTTP, or CLI), and runs the review lenses on the whole build: security (secrets, dependency audit, input validation), performance, UX, accessibility, documentation, release readiness. Every finding becomes a ticket that goes through the same loop. Packet: assets/qa-packet.md (two parts: the whole-build review and the QA run).
 
 ## Communication protocol
 

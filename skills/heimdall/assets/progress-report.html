@@ -1,6 +1,8 @@
 <!doctype html>
 <!-- Heimdall progress report, HTML version (references/production-orchestrator.md, section 6).
-     Save as .heimdall/progress.html, next to .heimdall/design/, so the relative design paths resolve.
+     Save as .heimdall/progress.html, next to .heimdall/design/, so the relative design paths resolve. Written only at
+     the G2.5 lock, at G7, and when the user asks for it; .heimdall/PROGRESS.md is refreshed every time.
+     Counts match lists: the "waiting on you" number equals the items under "Waiting on you".
      Same content and rules as assets/progress-report.md: regenerated, never hand-edited; every done item cites
      a gate lock date, an ADR, or a merge SHA and PR; no secrets, code, or diffs.
      One offline file: no scripts, no external fonts or stylesheets. The CSS carries IBM Carbon Design System tokens
@@ -119,6 +121,14 @@
   <h3 style="margin-top:16px">Built against the prototype</h3>
   <div class="shots">
     <figure><img src="<path to the UI ticket's screenshot>" alt="<screen> as built"><figcaption><screen> — T<nn>, merged <sha></figcaption></figure><!-- REPEAT -->
+  </div>
+
+  <!-- OPTIONAL: from the demo checkpoint on (references/execution-loop.md, section 9) -->
+  <h2>Try it</h2>
+  <div class="card">
+    <p>Start it: <code><the HANDOFF Dev command></code> — then open <a href="<URL>"><URL></a>, or run <code><CLI command></code>.</p>
+    <ol class="steps"><li><first step of the journey></li><li><…></li><li><…></li></ol>
+    <p><small>Tell me what feels wrong: a bug becomes a fix ticket; anything new becomes a change request.</small></p>
   </div>
 
   <div class="cols">

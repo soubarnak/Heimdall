@@ -14,7 +14,7 @@
 - Tracker: <GitHub owner/repo | Gitea host/owner/repo | local> — merge path <pr | local>
 - Integration branch: <main | heimdall/<project-slug>> — worktree root <path>
 - Execution topology: orchestrator <harness/model/effort>; coders <tier → harness/model/effort>; reviewer <harness/model/effort, family>; merger <orchestrator | harness/model>; researchers <harness/model>; cap <n> coders
-- Standing authorization (G2): <what the loop may do without asking — e.g. create issues and labels, push heimdall/* branches, open PRs, merge approved PRs into <integration branch>, close tickets, revert a breaking merge with a new commit>. Not authorized: <force-push, merge or push to the default branch (if not the integration branch), deploy, tag, publish, delete non-Heimdall branches, change repo settings, spend money>.
+- Standing authorization (G2): <"as defined in production-orchestrator.md, section 8" | that list with the user's changes, e.g. "minus pushes: merge path local, pushes at approved checkpoints">.
 - Framework: <none — Heimdall runs TDD, tickets, and review itself | superpowers | compound-engineering | mattpocock-skills (optional entry points, framework-capability-map.md)>
 
 ## ARCH  <!-- G2 -->
@@ -45,7 +45,7 @@
 | `public-api:<module>` | <the module's interface file(s)> |
 
 ### Commands
-- Install: `<…>`   Dev / run: `<…>`   Build: `<…>`
+- Install (frozen; never rewrites the lockfile, e.g. `npm ci`): `<…>`   Dev / run: `<…>`   Build: `<…>`
 - One test file: `<…>`   Full suite: `<…>`   Type-check: `<…>`   Lint / format: `<…>`   End-to-end: `<…>`
 
 ### Deployment and environments
@@ -72,10 +72,11 @@
 | 1 | T01 → #<n> scaffold | blocks everything |
 | 2 | T02, T03, T04 | parallel; disjoint touch sets |
 
-### Coverage  <!-- every user story → the tickets that build it; the single source for G3 validation and the progress report -->
-| User story | Tickets | Built when |
-|---|---|---|
-| US-01 <short title> | T02, T04 | both merged |
+### Coverage  <!-- every user story and Success Criterion → the tickets that build it and its acceptance ticket; the single source for G3 validation, the demo checkpoint, G6, and the progress report -->
+| User story or Success Criterion | Tickets | Acceptance ticket | Built when |
+|---|---|---|---|
+| US-01 <short title> | T02, T04 | T09 (SC-1) | T02, T04 merged (the acceptance ticket is not needed) |
+| SC-1 <short title> | T02, T04 | T09 | T09 merged |
 
 ## Constraints
 <performance, compliance, budget, platform, accessibility, licensing>

@@ -1,10 +1,14 @@
+<!-- heimdall:progress -->
 # PROGRESS — <project-slug> — <YYYY-MM-DD> — <phase, e.g. "G3 locked" or "build loop, wave 2 of 4">
 
 <!-- The visual progress report (references/production-orchestrator.md, section 6). Regenerate it from STATE.md,
      HANDOFF.md (Ticket Graph: the Coverage table maps user stories to tickets), and the tracker; never hand-edit it. The tracker wins on ticket status.
      Every "done" item cites a gate lock date, an ADR, or a merge SHA and PR. No secrets, code, or diffs.
-     Agent profile: save as .heimdall/PROGRESS.md and post it as a comment on the spec issue (GitHub, Gitea).
+     Agent profile: save as .heimdall/PROGRESS.md at every refresh. GitHub and Gitea, from G3 on: post it as one comment on
+     the spec issue the first time and edit that comment in place afterwards (comment id in STATE.md; tracker files).
+     The HTML version (assets/progress-report.html) is written only at the G2.5 lock, at G7, and on request.
      Chat profile: show it in full. Keep it under 90 lines, diagrams included.
+     Counts match lists: the header's "waiting on you" number equals the items under "Waiting on you".
      Mermaid: the `init` line, `flowchart`, `classDef`, and `class` only (no `click`, no HTML labels, no parentheses
      in labels), so GitHub and Gitea render it. Styling follows the IBM Carbon Design System, white theme: IBM Plex Sans,
      gray 10 groups, gray 50 lines, and Carbon tag tokens for status (background 20, border 40, text 70 of one hue; gray text is gray 100):
@@ -86,6 +90,16 @@ Chosen: **<option name>** — <one line: palette, type feel, density, layout>. C
 - Options shown: `option-a.html` <one line> · `option-b.html` chosen · `option-c.html` <one line>
 - Screenshots: `.heimdall/design/shots/` <or "none: no headless browser; open the HTML files">
 - Built against the prototype: <screens shipped so far, each with its UI ticket and screenshot path, or "no UI ticket merged yet">
+
+## Try it
+
+<!-- From the demo checkpoint on (references/execution-loop.md, section 9); omit the section before it. -->
+
+Start it: `<the HANDOFF Dev command>` — then open <URL>, or run `<CLI command>`.
+1. <first step of the journey a user would recognize>
+2. <…>
+3. <…>
+Tell me what feels wrong: a bug becomes a fix ticket; anything new becomes a change request.
 
 ## Done since the last report
 - <G2 locked YYYY-MM-DD: <stack in plain words> (ADR 0001–0004)>

@@ -22,8 +22,8 @@ Operating mode: <Prototype | MVP | Production>
   - <…>
 
 ## Success Criteria
-<!-- How the user will judge the whole build. Observable and testable. -->
-1. <…>
+<!-- How the user will judge the whole build. Observable and testable; each one gets an end-to-end acceptance ticket at G3. -->
+- **SC-1:** <…>
 
 ## Non-functional Requirements
 <!-- Measurable: numbers, budgets, standards. -->

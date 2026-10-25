@@ -78,7 +78,14 @@ Exactly one merge runs at a time. For each approved ticket, in approval order:
    git switch <integration-branch> && git merge --squash heimdall/t<nn>-<slug> && git commit -m "<ticket title> (T<nn>)"
    ```
 5. **Record the merge SHA.** Merges are serial, so the integration tip right after the merge is the squash commit: remote, `git fetch origin && git merge --ff-only origin/<integration-branch>` in the main checkout, then `git rev-parse HEAD` (GitHub cross-check: `gh pr view <pr#> --json mergeCommit --jq .mergeCommit.oid`); local path, `git rev-parse HEAD`.
-6. **Verify the integration tip** in the main checkout. With CI (HANDOFF's ARCH names it; T01 sets it up): GitHub Actions report check runs, not legacy statuses, so read `gh api repos/{owner}/{repo}/commits/<merge-sha>/check-runs --jq '[.check_runs[] | .conclusion]'` until no entry is `null` (every run finished; green = only `success`, `neutral`, or `skipped`); Gitea Actions report commit statuses: `tea api '/repos/{owner}/{repo}/commits/<merge-sha>/status' | jq -r .state` until it is not `pending`. Poll every 30 seconds, at most 30 minutes, then `needs-human`. Without CI: the full suite in the main checkout (run the Install command first if the merge changed a lockfile). Red after a merge stops all new dispatches until it is green again: either fix-forward (step 7 runs; a `bug` ticket is scheduled first) or `git revert <sha>` (a new commit, never a reset; pushed under the standing authorization), after which the ticket goes approved → changes-requested with a fix round that addresses the failing output; its branch and worktree still exist because step 7 did not run (execution-loop.md, section 8).
+6. **Verify the integration tip** in the main checkout. With CI (HANDOFF's ARCH names it; T01 sets it up), poll every 30 seconds:
+   - GitHub Actions report check runs, not legacy statuses: `gh api --paginate 'repos/{owner}/{repo}/commits/<merge-sha>/check-runs?per_page=100' --jq '.check_runs[].conclusion'` (one line per run, across every page). Finished when there is at least one line and none is `null`; green = only `success`, `neutral`, or `skipped`.
+   - Gitea Actions report commit statuses: `tea api '/repos/{owner}/{repo}/commits/<merge-sha>/status' | jq -r '"\(.state) \(.total_count)"'`. Finished when `total_count` is at least 1 and the state is not `pending`; green = `success`.
+   - **No lines (GitHub) or `total_count` 0 (Gitea) means CI has not started yet — never green.** Keep polling. No run within 10 minutes: `needs-human: CI did not start for <merge-sha>` (CI disabled, or the workflow does not trigger on the integration branch). Runs still unfinished after 30 minutes: `needs-human`.
+
+   Without CI: the full suite in the main checkout (run the Install command first if the merge changed a lockfile).
+
+   Red after a merge (CI or suite) stops all new dispatches until it is green again: either fix-forward (step 7 runs; a `bug` ticket is scheduled first) or `git revert <sha>` (a new commit, never a reset; pushed under the standing authorization), after which the ticket goes approved → changes-requested with a merge-repair round that addresses the failing output; its branch and worktree still exist because step 7 did not run (execution-loop.md, section 8).
 7. **Close and clean up** (after a green tip, or on the fix-forward route): close the ticket with the merge SHA (tracker file), then, in this order:
    ```bash
    git worktree remove <worktree-root>/t<nn>-<slug>
@@ -95,7 +102,7 @@ Exactly one merge runs at a time. For each approved ticket, in approval order:
 |---|---|---|---|
 | Mechanical | lockfile, generated client, snapshot, fragment ordering | merger | regenerate with the project's tool (`npm install`, `uv lock`, codegen), never hand-edit; run the full suite; note it in the PR |
 | Trivial adjacency | two imports added on neighbouring lines | merger | keep both; run the full suite; no re-review (no logic was written) — the merge report lists the kept hunks |
-| Semantic | both sides change the same logic; suite red after a clean merge | the coder | undo the merge (`git merge --abort` when conflicted, else `git reset --hard ORIG_HEAD` on the ticket branch), save the failing output as `.heimdall/reports/T<nn>-merge.md`, set the ticket approved → changes-requested; the fix round re-syncs and fixes in its worktree (execution-loop.md, section 8) |
+| Semantic | both sides change the same logic; suite red after a clean merge | the coder | undo the merge (`git merge --abort` when conflicted, else `git reset --hard ORIG_HEAD` on the ticket branch), save the failing output as `.heimdall/reports/T<nn>-merge.md`, set the ticket approved → changes-requested; the merge-repair round re-syncs and fixes in its worktree (execution-loop.md, section 8) |
 | Design | the two tickets disagree about a public interface | orchestrator | stop both; revision loop to G3 (or G2 if the module map was wrong) |
 
 Every conflict is a signal that L1–L3 missed something. Record it in STATE.md Health and fix the cause (add a hotspot, a discovery registry, or a missing blocking edge) before dispatching the next wave.
@@ -106,4 +113,4 @@ Every conflict is a signal that L1–L3 missed something. Record it in STATE.md 
 - Never merge a ticket whose head is not the guarded head recorded in STATE.md (the approved head, or the update-merge head from L6 step 3).
 - Never resolve a non-mechanical conflict silently; it goes back to a coder or up to the orchestrator.
 - Never let two coders share a worktree or a branch.
-- Merging into the default branch, and every push, happens only under the standing authorization recorded at G2 (production-orchestrator.md, G2). A user rule that demands approval per push overrides it: then use the local merge path and push at user-approved checkpoints.
+- Every push and every merge into the integration branch happens only under the standing authorization (production-orchestrator.md, section 8, the single source); merging into the default branch when it is not the integration branch is outside it.

@@ -1,6 +1,6 @@
 # Heimdall Adaptation Report
 
-How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill that takes an idea or an SRS to a shipped application. Written 2026-10-25 for version 1.0.0; updated 2026-10-26 for 1.1.0 (visual progress report, G2.5 prototype) and 1.2.0 (loop audit, section 17).
+How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill that takes an idea or an SRS to a shipped application. Written 2026-10-25 for version 1.0.0; updated 2026-10-26 for 1.1.0 (visual progress report, G2.5 prototype) 1.2.0 (loop audit, section 17), and 1.3.0 (review and live Light-tier run, section 18).
 
 ## Contents
 
@@ -21,13 +21,14 @@ How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill
 15. Assumptions made
 16. Maintenance
 17. Audit and fixes (2026-10-26)
+18. Review and live Light-tier run (2026-10-26, version 1.3.0)
 ## 1. Summary
 
 The original repository held eight knowledge files for a claude.ai Project. Together they made Claude act as a prompt optimizer and as a "production orchestrator" that planned software through gates and then handed copy-paste packets to a separate coding agent, with the user ferrying reports back by hand. It assumed Claude models, the claude.ai interface, and Claude plan tiers throughout.
 
 The adaptation keeps that design's best ideas — calibration, complexity routing, decision gates, advisor stance for knowledge gaps, derived interviews, the 22-item checklist, artifact discipline, and the "Your next steps" rule — and changes what it is:
 
-- **One installable Agent Skill** (`skills/heimdall/`) instead of loose knowledge files: a 106-line `SKILL.md` entry point, 27 references loaded on demand, and 23 asset templates.
+- **One installable Agent Skill** (`skills/heimdall/`) instead of loose knowledge files: a 113-line `SKILL.md` entry point, 32 references loaded on demand, 24 asset templates, and one script (`scripts/ticket-checks.sh`) copied into each project.
 - **It runs the build itself.** In an agent harness, Heimdall publishes a ticket graph to GitHub issues, Gitea issues, or local files, dispatches test-first coder agents into isolated git worktrees, sends every change to a fresh-context reviewer, and lands changes through one serial merger. The user signs off at a few gates instead of relaying every packet.
 - **It informs the user.** A Researcher role researches proactively at intake, architecture, and per ticket; every significant architecture choice becomes an ADR; briefings at G1, G2, and G7 say what was decided, what the user must decide, do, and learn, and what the risks and costs are.
 - **It is harness- and model-agnostic.** Detection replaces the old model/plan-tier question; 13 harnesses have adapters; 11 model families have prompting guides verified against vendor documentation on 2026-10-25; a tier map turns "Light / Standard / Frontier" into concrete model ids and selection flags per harness.
@@ -122,9 +123,9 @@ Defects found while reading it:
 | G6 QA | Whole-build review, QA agent, fixes as new tickets | Mandatory in Production |
 | G7 Ship | Release against the locked deployment target; operations handover briefing | Mandatory |
 
-Per ticket: the orchestrator creates the worktree and branch from the integration tip and writes the coder packet for the executing model; the coder works test-first and returns a report with a status token; the orchestrator validates the report, pushes, and opens a PR (`Closes #n`); a reviewer in a fresh context — never the coder, a different model family when available — audits on five independent axes (Spec, Standards, TDD audit, Security, Scope) and returns a verdict, with at most two fix rounds before escalation; the merger lands it. Failures route by cause (touch-set, seam, spec, environment, dependency, secret, destructive) to the right party; nothing asks the user from inside a subagent.
+Per ticket: the orchestrator creates the worktree and branch from the integration tip and writes the coder packet for the executing model; the coder works test-first and returns a report with a status token; the orchestrator validates the report, pushes, and opens a PR (`Closes #n`); a reviewer in a fresh context — never the coder, a different model family when available — audits on five independent axes (Spec, Standards, TDD audit, Security, Scope) and returns a verdict, with at most two review fix rounds before escalation (rounds that repair another ticket's merge do not count); the merger lands it. Before review, the orchestrator runs the mechanical ticket checks (`ticket-checks.sh`): head, clean tree, base sync, scope, lockfile drift, commit order, red-at-base. Failures route by cause (touch-set, seam, spec, environment, dependency, secret, destructive) to the right party; nothing asks the user from inside a subagent.
 
-From G1 on, a visual progress report (`.heimdall/PROGRESS.md` with Mermaid diagrams, and `.heimdall/progress.html`) shows the gate flow, what works so far, the build graph, the chosen design with its prototype, what was done, and the proposed next phase. It is styled with the IBM Carbon Design System, refreshed at gate locks, merged waves, and loop stops, and posted on the spec issue.
+From G1 on, a visual progress report (`.heimdall/PROGRESS.md` with Mermaid diagrams; `.heimdall/progress.html` at G2.5, G7, and on request) shows the gate flow, what works so far, the build graph, the chosen design with its prototype, what was done, the proposed next phase, and after the demo checkpoint how to try the application. It is styled with the IBM Carbon Design System, refreshed at gate locks, merged waves, and loop stops, and from G3 on posted as one comment on the spec issue that is edited in place.
 
 The merge path is a pull request by default when a remote tracker exists, or a local squash merge when the user requires approval for every push. Own-PR approval is impossible under one account on GitHub and Gitea, so verdicts are recorded as a comment plus a label.
 
@@ -152,7 +153,8 @@ tdd-protocol.md adapts Matt Pocock's `tdd` skill (mattpocock/skills, MIT; see TH
 - Mocks only at system boundaries, with dependency injection and SDK-style interfaces.
 - The loop: one test, red for the right reason, minimal green, commit, next behavior; refactoring happens in review rounds with the suite green before and after.
 - **Red-first evidence** that reviewers audit: a `test(T<nn>)` commit before the `feat(T<nn>)` commit (or one commit with the red output quoted), and a criterion → test → red message → green table in the report.
-- **Red-at-base check:** the reviewer runs the ticket's new tests against the base code in a scratch worktree and expects failures. Mandatory in Production and for High-risk tickets.
+- **Red-at-base check:** the orchestrator's ticket checks run the ticket's new tests against the base code in a scratch worktree and expect failures; the reviewer judges the output. Every feature and bug ticket in MVP and Production; skipped in Prototype mode and for tickets without behavior to drive.
+- **Acceptance tests:** one end-to-end test per Success Criterion, each its own ticket after the implementing tickets; G6 runs them first.
 - Special cases: scaffold and docs tickets (`TDD: n/a` with a named verification), characterization tests before changing untested legacy code, expand–contract for wide refactors, UI tests at component seams, and a relaxed Prototype option.
 
 ## 9. Research, architecture decisions, and briefings
@@ -166,7 +168,7 @@ This answers the question "does it cover automated research, architectural decis
 
 ## 10. Harness coverage
 
-harness-adapters.md was verified on 2026-10-25 against vendor documentation and the locally installed CLIs (Claude Code 2.1.310, Codex CLI 0.163.0, Muse Code 1.4.13, OpenCode 2.1.4, pi 1.4.0, Antigravity CLI 1.4.6).
+harness-adapters.md and the per-harness files it routes to (harness-claude-code.md, harness-codex.md, harness-muse-code.md, harness-others.md) were verified on 2026-10-25 and 2026-10-26 against vendor documentation and the locally installed CLIs (Claude Code 2.1.310, Codex CLI 0.163.0, Muse Code 1.4.13, OpenCode 2.1.4, pi 1.4.0, Antigravity CLI 1.4.6).
 
 | Harness | Skill folder (user) | Dispatch | Question tool |
 |---|---|---|---|
@@ -243,7 +245,7 @@ Key prompting findings that shape packets (full detail and sources in each famil
 Limits by design:
 
 - Merge conflicts are prevented by construction, not guaranteed absent (section 7).
-- A Light-tier model cannot orchestrate Build mode.
+- A Light-tier model cannot run the planning gates (G0–G3) or G6–G7. It may run the build loop of an already-planned build under the Light-tier conditions (production-orchestrator.md, section 3), and the resume protocol applies that rule to the model actually running.
 - Chat apps without tools cannot run the build loop; they run the planning gates and hand off.
 - Reviews by "a different model family" depend on the user having access to more than one vendor; otherwise a fresh-context reviewer of the same family is used.
 - Own-PR approval is impossible under one account, so tracker verdicts are comments plus labels, not formal approvals.
@@ -257,7 +259,7 @@ Unverified (marked in the files):
 
 Risks to watch:
 
-- Model names and harness flags change quickly. agent-model-map.md, the family files, and harness-adapters.md are the only places to update; no logic depends on specific names.
+- Model names and harness flags change quickly. agent-model-map.md, the family files, harness-adapters.md, and the per-harness files are the only places to update; no logic depends on specific names.
 - GitHub issue dependencies and Gitea dependencies can be disabled per instance or repository; the tracker files define a body-section fallback and record which representation is in use.
 - Parallel coders multiply cost. The concurrency cap defaults to 3 and calibration asks about budget when it cannot infer it.
 
@@ -269,9 +271,10 @@ Risks to watch:
 
 ## 16. Maintenance
 
-- Run `scripts/validate.sh` before every commit; it checks the frontmatter, index coverage, dangling references, the plugin manifests, and common secret shapes, and runs `claude plugin validate` and `muse skills validate` when those CLIs exist.
+- Run `scripts/validate.sh` before every commit; it checks the frontmatter, index coverage (references, assets, scripts), one-level-deep folders, dangling references and paths, the plugin manifests, a CHANGELOG entry for the current version, and common secret shapes, and runs `claude plugin validate` and `muse skills validate` when those CLIs exist.
 - When a vendor ships new models, edit agent-model-map.md and that family's prompting file, and update the verification date.
-- When a harness changes its skill folders or flags, edit harness-adapters.md, INSTALL.md, and scripts/install.sh together.
+- When a harness changes its skill folders or flags, edit harness-adapters.md (skill folders), the harness's own file (flags and grants), INSTALL.md, and scripts/install.sh together.
+- `skills/heimdall/scripts/ticket-checks.sh` runs in user projects on any stack: keep it to bash, git, and coreutils; check it with `bash -n` and `shellcheck`; and test a change against a real ticket (a PASS case and each failure code) before release. Its codes and their routes are a contract with execution-loop.md, section 5, step 6, and loop-card.md.
 - Keep `metadata.version` in SKILL.md and `version` in `.claude-plugin/plugin.json` equal, and record each release in CHANGELOG.md.
 
 ## 17. Audit and fixes (2026-10-26)
@@ -283,3 +286,19 @@ Findings that blocked a ticket on GitHub or Gitea: the integration branch was ne
 The dry run produced every artifact (spec, HANDOFF, STATE, briefings, research, three mockups, a prototype, nine tickets, five ADRs, AGENTS.md, the progress report) but locked G1 and G2 "provisionally" on a blanket "run the gates" instruction and committed the bootstrap before the G3 confirmation. The gate-level rule now defines what counts as a sign-off.
 
 Design gaps closed at the same time: no single source for user story → ticket coverage (the progress report's "What works so far" had no input), no prototype pointer in tickets or packets, no templates for the G6 packets, the researcher and scout packets, the chat-to-agent kickoff, or the bootstrap AGENTS.md, and a grading rule that could cap an accepted recommendation at C. A second fresh-context review of the revised files confirmed 23 of the 24 items closed and raised 15 smaller ones (ticket body publication, reviewer permissions for the red-at-base check, dependency installation in fresh worktrees, the return route after a semantic conflict or a reverted merge, merge path `local` with a remote tracker, resume crash windows); all are closed in the same release. A second live run resumed the scratch build with the revised skill and took T01 through coder, review with the red-at-base check, squash merge, close, and a refreshed progress report on the local path. Sections 6, 7, and 8 describe the resulting protocol; CHANGELOG.md lists every change.
+
+## 18. Review and live Light-tier run (2026-10-26, version 1.3.0)
+
+A live run resumed the scratch build with Haiku as orchestrator (Light tier), a headless Sonnet coder, and a headless Opus reviewer, and took ticket T02 through the whole loop on the local path. The loop worked, but the Light-tier rule never fired: calibration skipped detection on resume, so STATE.md kept the previous Standard-tier orchestrator, the old Heimdall version, and the old ticket-table shape. Haiku also misread the commit order and flagged a false TDD violation that the reviewer corrected, the reviewer choice came from the user's own instruction file rather than from Heimdall's rule, and the progress report said "0 waiting on you" above three waiting items. A full review of the skill then listed 25 items: 8 fixes, 9 gaps, and 8 improvements.
+
+Decisions:
+
+- **Mechanical checks move out of model judgement.** Head, clean tree, base sync, scope, lockfile drift, commit order, and red-at-base are deterministic, so a script does them (`ticket-checks.sh`), run by the orchestrator before review. A Light-tier orchestrator no longer has to read `git log` order correctly, and reviewers need no script grant: they read the report and judge only what needs judgement (whether a red failure is real, whether a `NO-RED` result is a characterization test). The script stays bash with git and coreutils because it runs in user projects on any stack, and it is copied into `.heimdall/` because headless agents and later sessions cannot rely on the skill's install path.
+- **Round cap counts only review verdicts.** Version 1.2.0 counted fix rounds caused by merge failures toward the cap of 2. That punished a ticket for another ticket's merge: a semantic conflict could exhaust a correct ticket's budget and escalate it to the user. Merge-repair rounds now increment the round number but are tallied in Health instead, so the health rule still catches a build where merges keep colliding.
+- **Resume re-detects.** The tier rules apply to the model running now, so calibration runs its detection steps on every resume and skips only the question. Liveness (subagent id or PID) and dirty-worktree handling close the crash windows an interrupted session left open.
+- **Acceptance tests are tickets.** One end-to-end test per Success Criterion gives G6 and the G7 smoke test a mechanical basis instead of a QA agent's narrative. They skip red-at-base and the commit-order rule because the test is the deliverable and passes by design once the implementing tickets are merged.
+- **The tracker holds a recoverable copy.** The progress report and a STATE plus HANDOFF snapshot are each one comment on the spec issue, edited in place by comment id (never "edit last", which could hit a claim or a verdict comment). A new machine rebuilds `.heimdall/` from them. The local tracker cannot do this, so the user is told to back up `.heimdall/`.
+- **G7 gets a packet.** The release is a fill-in plan with one go-ahead per outward step and a smoke test against the Success Criteria, run by the orchestrator itself rather than delegated.
+- **Less to load per loop session.** The per-harness adapters moved to one file per harness and the loop has a one-page card, so a G4–G5 session loads only what its topology uses.
+
+Not yet exercised live: concurrency above 1, merge path `pr` with real CI, Gitea, a change request, G6, G7, the chat kickoff, and Mermaid `init` rendering on GitHub. CHANGELOG.md lists every change.

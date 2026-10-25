@@ -3,7 +3,7 @@ name: heimdall
 description: Idea-to-shipment orchestration for building software with coordinated AI agents. Takes a vague idea or a complete SRS, researches what the user does not know, locks a spec and architecture through decision gates, breaks the work into a ticket graph on GitHub issues, Gitea issues, or local files, then runs parallel test-first coder agents (one git worktree per ticket), fresh-context reviewer agents, and a serial merger so work lands without merge conflicts, through QA to release. Harness- and model-agnostic (Claude Code, Codex CLI, Muse Code, OpenCode, pi, Gemini and Antigravity CLI, Qwen Code, Vibe, Grok Build, Kimi, Cursor, Copilot; Claude, GPT, Muse, DeepSeek, Qwen, Gemini, Mistral, Grok, Kimi, GLM, MiniMax). Also writes optimized prompts and model recommendations. Use when the user wants an app or feature built from an idea or SRS, says "use Heimdall" or "take this idea to shipment", or wants a prompt optimized for a specific model.
 compatibility: Agent profile needs a shell and git 2.38 or later. GitHub tracking needs gh; Gitea tracking needs tea; parallel agents need subagents or a headless agent CLI. Chat apps without tools run the planning gates and hand the build loop to a coding agent.
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   author: soubarnak
   repository: https://github.com/soubarnak/Heimdall
 ---
@@ -36,14 +36,14 @@ idea or SRS
   G2 *  architecture (ADRs), module map, seams, tracker, topology, authorization    project-research.md, merge-protocol.md
   G2.5  visual direction: mockups, your pick, a prototype (UI builds)               production-orchestrator.md
   G3    ticket graph + coverage -> tracker; bootstrap commit (ADRs, AGENTS.md)      production-orchestrator.md, tracker-*.md
-  G4-5  build loop: frontier -> coder (worktree, TDD) -> PR -> reviewer -> serial merge -> close
-                                                                                    execution-loop.md, agent-roles.md, tdd-protocol.md
-  G6    QA: whole-build review, QA agent, fixes as tickets
-  G7 *  ship + operations handover briefing
+  G4-5  build loop: frontier -> coder (worktree, TDD) -> checks -> PR -> reviewer -> serial merge -> close;
+        a demo you can try after the first complete journey                         loop-card.md, execution-loop.md, tdd-protocol.md
+  G6    QA: whole-build review, QA run, acceptance tests, fixes as tickets, re-QA    production-orchestrator.md, assets/qa-packet.md
+  G7 *  ship: preflight, release steps, smoke test, rollback plan, handover          assets/release-packet.md, project-research.md
 * = mandatory sign-off (G6 too in Production mode)
 ```
 
-A visual progress report (`.heimdall/PROGRESS.md` and `progress.html`) shows what works, the build graph, the chosen design and its prototype, and the proposed next phase. It is refreshed at every gate lock, after every merged wave, and on "Show progress" (production-orchestrator.md, section 6).
+A visual progress report (`.heimdall/PROGRESS.md`, plus `progress.html` at G2.5, G7, and on request) shows what works, the build graph, the chosen design and its prototype, and the proposed next phase. It is refreshed at every gate lock, after every merged wave, and on "Show progress" (production-orchestrator.md, section 6).
 
 ## What Heimdall promises — and its limits
 
@@ -63,7 +63,8 @@ A visual progress report (`.heimdall/PROGRESS.md` and `progress.html`) shows wha
 | references/project-research.md | automated research program, architecture decisions and ADRs, user briefings (decide, do, learn) | G0, G2, G3, G7 |
 | references/research-advisor-playbook.md | advisor stance for knowledge gaps; research Pathways A and B | whenever the user cannot answer |
 | references/production-orchestrator.md | Build mode: profiles, `.heimdall/` layout, operating modes, gates G0–G7, budgeting, resume, artifact rules, the progress report, failures, change requests, safety | all of Build mode |
-| references/execution-loop.md | tracker contract, scheduler, dispatch, review, merge, failure routing, concurrency, resume, fallbacks | G3 publish; G4–G5 |
+| references/execution-loop.md | tracker contract, scheduler, dispatch, ticket checks, review, merge, failure routing, concurrency, demo checkpoint, resume, fallbacks | G3 publish; G4–G5 |
+| references/loop-card.md | the build loop on one page: scheduler pass, one ticket start to finish, check codes, report tokens, resume | every G4–G5 session |
 | references/agent-roles.md | orchestrator, researcher, scout, coder, reviewer, merger, QA: duties, limits, tiers, status tokens, topologies | G2 topology; every dispatch |
 | references/merge-protocol.md | the seven layers that prevent merge conflicts; merge and conflict procedures | G2, G3, every merge |
 | references/tdd-protocol.md | test-first at agreed seams, anti-patterns, mocking, red-first evidence and audit | G2 seams; every coder and reviewer packet; Direct mode |
@@ -72,7 +73,11 @@ A visual progress report (`.heimdall/PROGRESS.md` and `progress.html`) shows wha
 | references/tracker-local.md | file-based tickets and local merges | no remote tracker |
 | references/checklist-and-grading.md | 22-item checklist, ≥95% threshold, A–D grades | every packet and gate lock |
 | references/agent-model-map.md | tier → model id, effort, and selection flag per family and harness; role defaults | G2; every packet's "For:" line |
-| references/harness-adapters.md | dispatch methods, skill directories, headless commands, question tools per harness | G2; every dispatch |
+| references/harness-adapters.md | dispatch methods and their rules, skill directories, instruction files, question tools; routes to one file per harness | G2; every dispatch |
+| references/harness-claude-code.md | Claude Code subagents, headless commands per role, grants | when the topology uses Claude Code |
+| references/harness-codex.md | Codex CLI subagents, headless commands per role, sandbox roots | when the topology uses Codex |
+| references/harness-muse-code.md | Muse Code subagents and headless commands | when the topology uses Muse Code |
+| references/harness-others.md | OpenCode, pi, Gemini CLI, Antigravity CLI, Qwen Code, Mistral Vibe, Grok Build, Kimi Code CLI, Cursor, GitHub Copilot | when the topology uses one of them |
 | references/framework-capability-map.md | optional frameworks (superpowers, compound-engineering, mattpocock/skills) and how they fit inside Heimdall's roles | G2, only if the user uses one |
 | references/prompting-universal.md | cross-vendor prompting rules, effort vocabulary, sampling | every prompt and packet |
 | references/prompting-claude.md | Anthropic Claude | packets for Claude models |
@@ -85,7 +90,9 @@ A visual progress report (`.heimdall/PROGRESS.md` and `progress.html`) shows wha
 | references/prompting-grok.md | xAI Grok | packets for Grok models |
 | references/prompting-kimi-glm-minimax.md | Moonshot Kimi, Zhipu GLM, MiniMax | packets for those models |
 
-Asset templates (fill, never improvise the shape): assets/spec.md, assets/handoff.md, assets/state.md, assets/decisions.md, assets/briefing.md, assets/research-digest.md, assets/adr.md, assets/repo-report.md, assets/setup-packet.md, assets/session-plan.md, assets/ticket.md, assets/coder-packet.md, assets/return-report.md, assets/review-packet.md, assets/review-report.md, assets/merge-packet.md, assets/pr-body.md, assets/progress-report.md, assets/progress-report.html, assets/qa-packet.md, assets/research-packet.md, assets/kickoff.md, assets/agents-md.md.
+Asset templates (fill, never improvise the shape): assets/spec.md, assets/handoff.md, assets/state.md, assets/decisions.md, assets/briefing.md, assets/research-digest.md, assets/adr.md, assets/repo-report.md, assets/setup-packet.md, assets/session-plan.md, assets/ticket.md, assets/coder-packet.md, assets/return-report.md, assets/review-packet.md, assets/review-report.md, assets/merge-packet.md, assets/pr-body.md, assets/progress-report.md, assets/progress-report.html, assets/qa-packet.md, assets/release-packet.md, assets/research-packet.md, assets/kickoff.md, assets/agents-md.md.
+
+Script (copied to `.heimdall/ticket-checks.sh` at G3 setup; run by the orchestrator, never edited per project): scripts/ticket-checks.sh — head, clean tree, base, scope, lockfile drift, commit order, and red-at-base checks on a finished ticket before review (execution-loop.md, section 5).
 
 **Missing-file guard:** if a file above is missing, say exactly which one and how your output is degraded. Never improvise its contents. When files are added or renamed, update this index in the same change.
 

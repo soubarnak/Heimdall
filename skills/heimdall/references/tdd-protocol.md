@@ -53,7 +53,7 @@ Design boundaries to be mockable:
 For each acceptance criterion of the ticket, in order:
 
 1. Pick the next behavior. Write **one** test at an agreed seam.
-2. Run that test file. It must fail **for the right reason**: the behavior is missing. A typo, a wrong import path, or broken test setup is not red — fix the test and run again.
+2. Run that test file. It must fail **for the right reason**: the behavior is missing. Importing a module or function that this ticket will create, and failing because it does not exist yet, is red — the behavior is missing. A typo, a wrong path to existing code, a missing installed dependency, or broken test setup is not red — fix it and run again.
 3. Write the minimum code that makes it pass. Do not anticipate later tests or add speculative features.
 4. Run the test file; it passes. Run the type checker regularly.
 5. Commit (section 6). Next behavior.
@@ -69,25 +69,16 @@ Reviewers cannot watch the loop, so the coder leaves evidence:
 - **Commit order.** For each behavior, a `test(T<nn>): <behavior>` commit (the failing test) comes before the `feat(T<nn>): <behavior>` commit that makes it pass, or both land in one commit and the report quotes the red output. Fix rounds use `fix(T<nn>): …` and `refactor(T<nn>): …`. The squash merge collapses them, so the audit happens at review time.
 - **Report table** (assets/return-report.md): criterion → test name → the one-line failure message seen at red → green.
 
-The reviewer audits:
+The checks and the audit:
 
-1. `git log --reverse --format='%h %s' <base>..<head>`: test commits precede or accompany the behavior they cover.
-2. Every new test sits at a seam listed in the ticket.
-3. **Red-at-base check** (mandatory in Production and on High-risk tickets; one spot-check in MVP; skipped in Prototype): run the ticket's new tests against the base code. They must fail. The orchestrator writes this script as `.heimdall/packets/T<nn>-red-at-base.sh` with every placeholder filled, and the review packet points at it; the reviewer runs it with `bash <absolute path>` (one allow-listed command, so no shell grant for loops or `mkdir` is needed):
-   ```bash
-   #!/usr/bin/env bash
-   set -eu
-   W=<worktree>; S=<worktree-root>/scratch-t<nn>; BASE=<base-sha>; HEAD=<head-sha>
-   git -C "$W" worktree add --detach "$S" "$BASE"
-   trap 'git -C "$W" worktree remove --force "$S"' EXIT
-   (cd "$S" && <Install command from HANDOFF>)                  # the scratch tree has no installed dependencies
-   git -C "$W" diff --name-only --diff-filter=AM "$BASE" "$HEAD" -- <test path globs from the touch set> | while read -r f; do
-     mkdir -p "$S/$(dirname "$f")" && git -C "$W" show "$HEAD:$f" > "$S/$f"
-   done
-   (cd "$S" && <one-test-file command from HANDOFF> <the same files>) || echo "RED-AT-BASE: tests failed on the base code, as expected"
-   ```
-   `<base-sha>` is the report's `Synced with` SHA; `<test path globs>` are the test paths of the ticket's touch set. A test that fails in the scratch tree because of a missing dependency or a renamed module, not a missing behavior, is a setup error, not a red: fix the script's Install step and run again.
-   A new test that passes on the base code tests nothing new.
+1. **Mechanical checks** (execution-loop.md, section 5, step 6): before review the orchestrator runs `.heimdall/ticket-checks.sh` (a copy of the skill's `scripts/ticket-checks.sh`), which writes `.heimdall/reports/T<nn>-checks-<round>.md`. Three of its checks belong to this protocol:
+   - **Commit order:** every `feat(T<nn>)` commit has a `test(T<nn>)` commit after the previous `feat` commit, or changes a test file itself (then the report must quote the red output). Violation: `COMMIT-ORDER`.
+   - **Tests present:** the diff adds or changes a file matching the ticket's test globs, unless the ticket is `TDD: n/a` or `env`. Violation: `NO-TESTS`.
+   - **Red-at-base:** the ticket's added or changed test files are copied onto the base code (the report's `Synced with` SHA) in a scratch worktree, after the HANDOFF Install command, and run with the one-test-file command. Result `RED` (they fail: expected), `NO-RED` (they pass on the base code), `NO-TESTS` (no test file changed), or `SETUP-ERROR` (the install, the copy, or the run itself could not complete — including a test command that is not found). It runs on every `feature` and `bug` ticket in MVP and Production; it is skipped in Prototype mode and for `TDD: n/a`, `env`, `acceptance`, and characterization-only prefactor tickets.
+2. **The reviewer audits** from the commit list, the checks report, and the code — it runs no scripts:
+   - Test commits precede or accompany the behavior they cover (`git log --reverse --format='%h %s' <base>..<head>`), and a `COMMIT-ORDER` code is explained or is a finding.
+   - Every new test sits at a seam listed in the ticket.
+   - **Red-at-base output:** a failure because a module, function, or route the ticket creates does not exist yet is red. A failure because an installed dependency is missing or the tooling broke is a setup problem, not red evidence: the reviewer says so, and the orchestrator fixes the setup. `NO-RED` means the new tests test nothing new — a blocking TDD finding in MVP and Production unless the report shows they are characterization tests that pin existing behavior on purpose.
 
 ## 7. Bugs
 
@@ -98,9 +89,10 @@ A bug fix starts with a test that reproduces the bug through a seam (red), then 
 - **Scaffold, config, and docs tickets** have no behavior to drive. The ticket says `TDD: n/a — <reason>` and names a verification instead (the build passes, the test runner finds a smoke test, CI runs).
 - **Untested legacy code:** before changing it, a prefactor ticket adds characterization tests at the seam (pinning current behavior), then the change ticket proceeds test-first.
 - **Wide refactors** (one mechanical change with a large blast radius) use expand–contract: add the new form beside the old, migrate call sites in batches (one ticket per batch, each green), then remove the old form. TDD applies to the expand step; batches are verified by the existing suite.
+- **Acceptance tickets** (kind `acceptance`, production-orchestrator.md, G3) add one end-to-end test per Success Criterion after the implementing tickets merged. The test is the deliverable, so it passes at its head; red-at-base and commit order do not apply. The reviewer checks that it drives the running application the way a user would (the End-to-end command), asserts the criterion's observable result, and does not reach into internals.
 - **UI:** test behavior at the component or page seam (rendered output and user events), not styling. Visual acceptance uses screenshots in the report.
 - **Prototype mode** may relax to "tests at seams, after the code" if the user chose that at G1; the reviewer then skips the commit-order audit but still rejects the anti-patterns.
 
 ## 9. Commands
 
-HANDOFF.md (ARCH, "Commands") records the exact commands, set by the scaffold ticket: run one test file, run the full suite, type-check, lint, end-to-end. Coders use those commands, not guesses. There is no coverage target: agreed seams on the critical paths matter more than a percentage.
+HANDOFF.md (ARCH, "Commands") records the exact commands, set by the scaffold ticket: install, run one test file, run the full suite, type-check, lint, end-to-end. Coders use those commands, not guesses. **The Install command is a frozen install** that never rewrites the lockfile — for example `npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`, `uv sync --frozen`, or `cargo build --locked` — so installing in a worktree or a scratch tree cannot change a hotspot file. Only a ticket that holds the `deps` hotspot changes dependencies, with the package manager's add or update command. There is no coverage target: agreed seams on the critical paths matter more than a percentage.

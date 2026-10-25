@@ -6,7 +6,8 @@ Pre-check conflicts: <paths reported by git merge-tree, or "none — update and 
 
 <!-- Orchestrator: dispatch only when references/merge-protocol.md, L6 step 2 or 3 needs resolution.
      Save as .heimdall/packets/T<nn>-merge.md; the report goes to .heimdall/reports/T<nn>-merge.md. One merge at a time.
-     A headless merger gets the same shell grants and working directory as a coder (references/harness-adapters.md). -->
+     A headless merger gets a coder's shell grants and working directory plus `git checkout` (to take one side of a
+     mechanical conflict) (references/harness-adapters.md and the harness's own file). -->
 
 ## Prompt
 

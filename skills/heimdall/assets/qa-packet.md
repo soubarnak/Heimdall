@@ -27,15 +27,16 @@ You are the <Part> for a finished build. You did not write this code. You report
 <procedure_whole_build_review>  <!-- keep this block for Part = whole-build review; delete the other -->
 1. Run the full suite, the type checker, and the linter. Record the results.
 2. **Spec axis:** for every user story and every Success Criterion in the spec, find where it is implemented and tested. Report: missing or partial requirements, behavior nobody asked for, requirements that look implemented but are wrong. Quote the spec line.
-3. **Standards axis:** violations of the documented repo standards (cite file and rule), then the smell baseline from the review protocol (references/agent-roles.md, Reviewer) across the whole build: duplicated logic between tickets, drifted conventions, dead code left by fix rounds. Label smells "possible <smell>" and quote the hunk.
+3. **Standards axis:** violations of the documented repo standards (cite file and rule), then the smell baseline — <the orchestrator pastes the smell list from references/agent-roles.md, Reviewer, unchanged> — across the whole build, with particular attention to duplicated logic between tickets, drifted conventions, and dead code left by fix rounds. Label smells "possible <smell>" and quote the hunk.
 4. Keep the axes separate. Blocking: any Spec finding; hard Standards violations. Smells are non-blocking.
 </procedure_whole_build_review>
 
 <procedure_qa_run>  <!-- keep this block for Part = QA run; delete the other -->
 1. Install and start the application with the HANDOFF commands (services with podman when needed). If it cannot start, stop with `QA: BLOCKED: environment` and the exact error.
-2. **Success Criteria:** exercise each one as a user would (HTTP, CLI, or the UI through the harness's browser tool if it has one). Record pass or fail with the steps taken.
-3. **Lenses**, one section each: security (no secrets in the repo or its history — `git log -p -S` on the usual key shapes; input validation at trust boundaries; authentication and authorization on every protected path; dependency audit with the stack's tool); performance (obvious N+1 queries, unbounded lists, missing indexes, slow startup); UX (dead ends, missing feedback, broken navigation); accessibility (labels, contrast, keyboard path for the core journey); documentation (README runs as written; `.env.example` complete); release readiness (build from clean, CI green, migrations reversible or backed up, license and privacy line present for user-facing apps); destructive-change caution (any migration or script that deletes or rewrites data has a backup step).
-4. **Design (UI builds):** compare each shipped screen with its prototype screen. A difference in layout, flow, copy, or states is a finding.
+2. **Acceptance tests:** run the End-to-end command (one acceptance test per Success Criterion, HANDOFF Coverage table). Record each result.
+3. **Success Criteria:** exercise each one yourself as a user would — the UI through the harness's browser tool if it has one; otherwise HTTP requests (`curl`) against the running application or the CLI. A criterion you can only check through its acceptance test says so in Steps taken. Record pass or fail with the steps taken.
+4. **Lenses**, one section each: security (no secrets in the repo or its history — `git log -p -S` on the usual key shapes; input validation at trust boundaries; authentication and authorization on every protected path; dependency audit with the stack's tool); performance (obvious N+1 queries, unbounded lists, missing indexes, slow startup); UX (dead ends, missing feedback, broken navigation); accessibility (labels, contrast, keyboard path for the core journey); documentation (README runs as written; `.env.example` complete); release readiness (build from clean, CI green, migrations reversible or backed up, license and privacy line present for user-facing apps); destructive-change caution (any migration or script that deletes or rewrites data has a backup step).
+5. **Design (UI builds):** compare each shipped screen with its prototype screen. A difference in layout, flow, copy, or states is a finding.
 </procedure_qa_run>
 
 <rules>
@@ -52,9 +53,9 @@ Agent: <harness> / <model> / effort <level>
 Checks: full suite <command> → <result>; type-check → <result>; lint → <result>; build from clean → <result>
 
 ## Success Criteria  <!-- QA run -->
-| # | Criterion | Result | Steps taken |
-|---|---|---|---|
-| 1 | <…> | PASS | <…> |
+| SC | Criterion | Acceptance test | Result | Steps taken |
+|---|---|---|---|---|
+| SC-1 | <…> | <T09: PASS> | PASS | <…> |
 
 ## Findings  <!-- one line each; group by axis or lens -->
 - [blocking | non-blocking] <axis or lens>: <finding> — <evidence> — proposed ticket: <title; kind bug | feature | prefactor; touch set>

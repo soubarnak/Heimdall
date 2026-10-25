@@ -52,6 +52,7 @@ Use assets/spec.md. Its shape follows Matt Pocock's `to-spec` template (Problem 
 ## 5. G1 lock
 
 - Present the G1 briefing (assets/briefing.md): the spec (agent profile: path and summary; chat profile: the full file), the grade, the assumptions, the operating mode recommendation (Prototype / MVP / Production), what discovery research found, and what the user will need to do or learn before G7.
+- Ask for the sign-off with the recommended-defaults fast path (production-orchestrator.md, section 3): one question after the briefing, recommended answer "accept every recommendation as shown".
 - Lock requires grade A, or the user explicitly accepting a lower grade (recorded in STATE.md as an accepted risk).
 - On lock: write HANDOFF v1 (assets/handoff.md) with the Settled Decisions so far, create STATE.md (assets/state.md), and — once the tracker is chosen at G2 — publish the spec as the `heimdall:spec` issue at G3.
 - Later scope changes go through the change-request flow (production-orchestrator.md, section 7), never silently.

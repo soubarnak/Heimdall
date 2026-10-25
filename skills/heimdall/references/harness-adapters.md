@@ -1,6 +1,6 @@
 # Harness Adapters
 
-Verified 2026-10-25 against vendor docs (Context7 and official pages) and the locally installed CLIs: Claude Code 2.1.310, Codex CLI 0.163.0, Muse Code 1.4.13, OpenCode 2.1.4, pi 1.4.0, Antigravity CLI 1.4.6. Rows marked UNVERIFIED come from a third-party summary only.
+Verified 2026-10-25 against vendor docs (Context7 and official pages) and the locally installed CLIs: Claude Code 2.1.310, Codex CLI 0.163.0, Muse Code 1.4.13, OpenCode 2.1.4, pi 1.4.0, Antigravity CLI 1.4.6; section 1 re-checked 2026-10-26 when the per-harness adapters moved to their own files. Rows marked UNVERIFIED come from a third-party summary only.
 
 Use this file to: detect the harness (calibration.md), pick the dispatch method for each role (production-orchestrator.md, G2; agent-roles.md), write headless commands for coder, reviewer, merger, and researcher packets (execution-loop.md), and know which question tool to use.
 
@@ -8,7 +8,7 @@ Use this file to: detect the harness (calibration.md), pick the dispatch method 
 
 1. Dispatch methods
 2. Harness table (skills, instructions, questions)
-3. Per-harness adapters: Claude Code · Codex CLI · Muse Code · OpenCode · pi · Gemini CLI · Antigravity CLI · Qwen Code · Mistral Vibe · Grok Build · Kimi Code CLI · Cursor · GitHub Copilot
+3. Per-harness adapters (one file per harness)
 4. Chat apps (chat profile)
 5. Cross-vendor models inside one harness
 
@@ -19,7 +19,7 @@ Pick one per role at G2 and record it in Settled Decisions (the execution topolo
 | Method | When | How |
 |---|---|---|
 | **Subagent** | Harness has subagents (Claude Code, Codex, Muse Code, OpenCode, Gemini CLI, Cursor) | Spawn a background child with the packet's Prompt section, the pinned model and effort, and write access to its worktree. Its final message is the report; save it to `.heimdall/reports/`. |
-| **Headless harness** | Executor is a different harness or vendor (tandem), or the user wants isolation | Run the harness's non-interactive command (section 3) with the packet file as input. Needs explicit user consent: it spends that vendor's quota and runs with that tool's permissions. |
+| **Headless harness** | Executor is a different harness or vendor (tandem), or the user wants isolation | Run the harness's non-interactive command (its file in section 3) with the packet file as input. Needs explicit user consent: it spends that vendor's quota and runs with that tool's permissions. |
 | **Same session** | No subagents (pi without extensions) or a tiny packet | Checkpoint STATE.md, adopt the role, follow the packet exactly in the worktree, write the report, switch back. Cap 1 (execution-loop.md, section 10). |
 | **User-driven** | Executor is a GUI tool (Cursor, Copilot in an IDE) or the user wants control | Emit numbered next steps (production-orchestrator.md, section 6). |
 
@@ -28,11 +28,12 @@ Rules for every method:
 - Subagents and headless runs cannot ask the user questions (Claude Code subagents have no AskUserQuestion; `vibe --prompt` disables `ask_user_question`; Muse `--user-input-auto-resolve` cancels prompts). Gates therefore always run in the orchestrating session. Packets tell executors to stop and report when blocked.
 - Never pass a permission-bypass flag (`--dangerously-skip-permissions`, `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `--auto`, `-s danger-full-access`, `--permission-mode bypassPermissions`) unless the user asks for it for that run.
 - One worktree and branch per ticket (`heimdall/t<nn>-<slug>`), created by the orchestrator from the integration tip. A harness's own worktree isolation is acceptable only if it bases the worktree on the integration tip.
-- Coders need network access only for dependency installs (for example Codex `-c sandbox_workspace_write.network_access=true` for the tickets that hold the `deps` hotspot); a reviewer running the red-at-base script needs it for the script's Install step unless the package cache is warm. They never need tracker access or push rights.
+- Coders need network access only for dependency installs (for example Codex `-c sandbox_workspace_write.network_access=true` for the tickets that hold the `deps` hotspot). Reviewers need none. Coders and reviewers never need tracker access or push rights. The orchestrator's ticket checks (execution-loop.md, section 5) run the Install command in a scratch worktree, so the orchestrating session needs the network for that step unless the package cache is warm.
 - **Working directory:** run every headless command from the main checkout, in a subshell that enters the worktree — `(cd <worktree> && <command>)` — or with the CLI's own directory flag (`-C <worktree>` for Codex). Packet and report paths are always absolute, under the main checkout's `.heimdall/`.
 - **Report capture:** every headless run must leave its final message at `.heimdall/reports/T<nn>-<role>-<r>.md`; the per-harness line below says how (an output flag, or stdout redirected). If the file is missing or empty afterwards, treat the run as an executor failure (execution-loop.md, section 8).
-- **Shell for coders, reviewers, and mergers:** a headless coder runs the test runner and commits; a reviewer runs tests, git, and the red-at-base script; a merger needs what a coder needs. Grant exactly those commands. A linked worktree commits into the main checkout's `.git`, so sandboxes that confine writes to the worktree (Codex `workspace-write`) also need the main checkout's `.git` as a writable root; a reviewer's red-at-base scratch worktree lives under `<worktree-root>`.
-- **Directories:** agents read packets, HANDOFF, and the spec under the main checkout's `.heimdall/` and work under `<worktree-root>`, which sits outside the project directory. Harnesses that confine file tools to the working directory need both granted (Claude Code: `--add-dir` for headless runs, `/add-dir <worktree-root>` or `permissions.additionalDirectories` in the orchestrating session for subagents). The hello-world check (assets/setup-packet.md, step 6) exercises exactly these grants before the loop starts: it reads from `.heimdall/`, writes and commits in a scratch worktree, and runs a script from `.heimdall/packets/`.
+- **Shell for coders, reviewers, and mergers:** a headless coder runs the test runner and the package manager and commits; a reviewer runs tests and read-only git commands and no scripts; a merger needs what a coder needs plus taking one side of a mechanical conflict. Grant exactly those commands. A linked worktree commits into the main checkout's `.git`, so sandboxes that confine writes to the worktree (Codex `workspace-write`) also need the main checkout's `.git` as a writable root for coders and mergers. The ticket checks' scratch worktree lives under `<worktree-root>` and is created by the orchestrator, not by an agent.
+- **Directories:** agents read packets, HANDOFF, and the spec under the main checkout's `.heimdall/` and work under `<worktree-root>`, which sits outside the project directory. Harnesses that confine file tools to the working directory need both granted (harness-claude-code.md for Claude Code). The hello-world check (assets/setup-packet.md, step 6) exercises exactly these grants before the loop starts: it reads from `.heimdall/`, writes and commits in a scratch worktree, and runs git there.
+- **Liveness:** subagents never outlive the orchestrating session. For every background headless run, record its PID in STATE.md (In flight) so a resumed session can test it with `kill -0 <pid>` (execution-loop.md, section 9).
 
 ## 2. Harness table
 
@@ -58,79 +59,14 @@ Invocation: Claude Code `/heimdall` (plugin: `/heimdall:heimdall`); Codex `$heim
 
 ## 3. Per-harness adapters
 
-### Claude Code
+Each harness's subagent mechanism, its headless command per role (coder, reviewer, merger), report capture, and install notes live in one file per harness. Load only the files for the harnesses in the topology.
 
-- Subagents: the Agent tool, or `.claude/agents/<name>.md` with `model:` (`haiku|sonnet|opus|fable|<full id>|inherit`), `effort:` (`low`–`max`), `tools:`, `isolation: worktree`. Subagents cannot call AskUserQuestion.
-- Headless coder: `(cd <worktree> && claude -p "$(cat <abs packet>)" --model <alias> --effort <level> --permission-mode acceptEdits --add-dir <main checkout> --allowedTools "Bash(git add:*),Bash(git commit:*),Bash(git merge:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git rev-parse:*),Bash(git show:*),Bash(<test runner>:*),Bash(<package manager>:*)" --max-turns <n> --output-format json | jq -r .result > <abs report>)`. `acceptEdits` alone denies every shell command in `-p` mode (verified 2026-10-26, Claude Code 2.1.310: `git commit` was refused and reported under `permission_denials`); `--allowedTools` grants exactly the commands the packet needs — not `Bash(git:*)`, which would also allow `git push`, and never bare `Bash`. `--add-dir <main checkout>` lets the run read `.heimdall/`. Reviewer: the same with `--allowedTools "Bash(git diff:*),Bash(git log:*),Bash(git rev-parse:*),Bash(git show:*),Bash(git status:*),Bash(<test runner>:*),Bash(bash <abs red-at-base script>),Read,Grep,Glob" --disallowedTools "Edit,Write"`. Merger: as the coder plus `Bash(git checkout:*)` (taking one side of a mechanical conflict). Subagents from the orchestrating session: add `<worktree-root>` with `/add-dir` first. `-p` skips the workspace-trust dialog: use it only in trusted project directories. The report is `.result` of the JSON output.
-- Model and effort in session: `/model`, `/effort`.
-- Other vendors' models via `ANTHROPIC_BASE_URL` (DeepSeek, Kimi, GLM, MiniMax, Meta): the slot names (`opus`, `sonnet`, `haiku`) then map to that vendor's models — record the real model in STATE.md.
-
-### Codex CLI
-
-- Subagents: `spawn_agent` / `wait_agent` (`features.multi_agent`, on by default); roles in `.codex/agents/*.toml`; defaults `agents.default_subagent_model`, `agents.default_subagent_reasoning_effort`. GPT-6 "may delegate less often than desired" — say explicitly when to spawn.
-- Headless coder: `codex exec -m <model> -c model_reasoning_effort="<level>" -s workspace-write -c 'sandbox_workspace_write.writable_roots=["<main checkout>/.git"]' -C <worktree> -o <abs report> "$(cat <abs packet>)"`. The `writable_roots` entry (config key `sandbox_workspace_write.writable_roots`, Codex config reference) lets the coder commit from a linked worktree; without it `git commit` fails inside the sandbox. Reviewer: the same command with `writable_roots=["<main checkout>/.git", "<worktree-root>"]` (the red-at-base scratch worktree) — `read-only` would block it. Merger: as the coder. `-o` writes the final message to the report path. `--json` streams JSONL; `--output-schema <file>` constrains the final message; `--ephemeral` keeps no session files.
-- Sandbox `-s read-only|workspace-write|danger-full-access`; approvals `-a <policy>` (top-level `codex`).
-- AGENTS.md over 32 KiB is silently truncated (`project_doc_max_bytes`).
-
-### Muse Code
-
-- Subagents: native (lead session spawns children; `/subagents`, `/tasks`); `--subagent-worktree-isolation` isolates only children that ask.
-- Headless: `(cd <worktree> && muse exec --prompt-file <abs packet> --model <id> --reasoning-effort <level> --trust-workspace --user-input-auto-resolve > <abs report>)`; stdout holds the final message in text mode (capture UNVERIFIED on this machine); `--json` emits events instead; `--output-schema <file>` (Meta provider only); `--max-model-steps <n>` caps runaway loops. Exit 0 = completed, 1 = failed or step cap, 2 = usage error. Keep the default approval mode and sandbox unless the user chooses otherwise.
-- Install from a local path: `muse skills validate <path>` then `muse skills install <path> --scope user`. `muse skills list --source all` shows what loaded.
-- Default model differs between docs (`muse-spark-1.2`) and the local catalog (`muse-wonder-1.0`): pin the model explicitly.
-
-### OpenCode
-
-- Subagents: `.opencode/agents/<name>.md` with `mode: subagent`, `model: provider/model`, `permission:` (e.g. `edit: allow`, `bash: ask`), `steps:`; run in child sessions via the `subagent` tool. Commands with `subtask: true` also spawn a subagent.
-- Headless: `(cd <worktree> && opencode run -m <provider/model> --agent <agent> -f <abs packet> "Execute the attached packet." > <abs report>)`; stdout holds the response in text mode (capture UNVERIFIED on this machine); `--format json` emits events instead. `--auto` approves everything not explicitly denied — consent required.
-- Muse via OpenCode loses reasoning across turns (`@ai-sdk/openai-compatible`); prefer Muse Code for Muse executors.
-
-### pi
-
-- No built-in subagents ("Pi ships with powerful defaults but skips features like sub-agents and plan mode"). Use same-session execution, or headless pi runs, or the community `pi-subagents` package (`pi install npm:pi-subagents`) if the user installs it.
-- Headless: `(cd <worktree> && pi -p "$(cat <abs packet>)" --model <provider/id> --thinking <off|minimal|low|medium|high|xhigh|max> > <abs report>)`; stdout holds the final message in text mode (capture UNVERIFIED on this machine); `--mode json` emits events instead; `--tools <allowlist>` restricts tools; `--approve` trusts project-local files for one run.
-- Install from Git: `pi install git:github.com/<owner>/<repo>` (private-repo auth UNVERIFIED — clone with `gh` and use `--skill <path>` or copy into `~/.agents/skills/` instead).
-
-### Gemini CLI
-
-- Subagents: `.gemini/agents/*.md` (`name`, `description`), invoked as `@name`; on by default.
-- Install from Git: `gemini skills install https://github.com/<owner>/<repo>.git --path skills/heimdall --consent` (`--scope user|workspace`). Private-repo auth UNVERIFIED.
-- Add `"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}` so project AGENTS.md files load.
-- Gemini CLI was replaced by Antigravity CLI for unpaid and Google One users on 2026-06-18.
-
-### Antigravity CLI (`agy`)
-
-- Headless: `(cd <worktree> && agy -p "$(cat <abs packet>)" --model <id> --effort <low|medium|high|xhigh|max> --mode <accept-edits|plan|auto> > <abs report>)`; text mode on stdout (capture UNVERIFIED on this machine); `--output-format json` emits structured output instead. `--dangerously-skip-permissions` only on explicit request.
-- Plugins: `agy plugin install <target>`, `agy plugin validate`. Skill directories UNVERIFIED — install into `~/.agents/skills/` and check with the CLI.
-
-### Qwen Code
-
-- Skills: `~/.qwen/skills/<name>/SKILL.md` (personal), `.qwen/skills/<name>/SKILL.md` (project). Reads `QWEN.md` and `AGENTS.md`.
-- Extensions: `qwen extensions install <owner>/<repo>` (seen in third-party READMEs).
-- Serve self-hosted Qwen with the right parsers and sampling (prompting-qwen.md) before dispatching.
-
-### Mistral Vibe
-
-- Headless `(cd <worktree> && vibe --prompt "$(cat <abs packet>)" --agent <agent> > <abs report>)` (capture UNVERIFIED on this machine). `vibe --prompt` auto-approves when `--agent` is omitted and disables `ask_user_question`. Always pass `--agent plan` (review packets) or `--agent accept-edits` (build packets).
-- Never set a custom system prompt for Heimdall (it replaces Vibe's default); rely on AGENTS.md and the skill.
-
-### Grok Build (beta)
-
-- Reads `AGENTS.md` and Claude Code files with "zero configuration". Skills from `~/.grok/skills/`, `~/.agents/skills/`, `.grok/skills/` (project `.agents/skills/` not listed).
-- Plugins: marketplace sources in `~/.grok/config.toml`, `--plugin-dir <path>`. Headless flags UNVERIFIED (Agent Client Protocol is the official programmatic route).
-
-### Kimi Code CLI
-
-- Skills: `~/.kimi-code/skills/`, `~/.agents/skills/`, `.kimi-code/skills/`, `.agents/skills/` (project wins). The old `kimi-cli` is archived.
-
-### Cursor
-
-- Skills from `.agents/skills/`, `.cursor/skills/`, and the Claude/Codex directories. Subagents in `.cursor/agents/` (`model`, `readonly`, `is_background`), invoked as `/name`.
-- Coder packets are usually user-driven: open the ticket's worktree folder in Cursor. Turn auto model selection off for Standard and Frontier tickets (consistency).
-
-### GitHub Copilot
-
-- Skill locations "depend on the surface"; `.github/skills`, `.agents/skills`, `.claude/skills` (project), `~/.copilot/skills` or `~/.agents/skills` (user). Plugins: `copilot plugin marketplace add <owner>/<repo>`, `copilot plugin install <plugin>@<marketplace>`.
+| Harness | File |
+|---|---|
+| Claude Code | harness-claude-code.md |
+| Codex CLI | harness-codex.md |
+| Muse Code | harness-muse-code.md |
+| OpenCode, pi, Gemini CLI, Antigravity CLI, Qwen Code, Mistral Vibe, Grok Build, Kimi Code CLI, Cursor, GitHub Copilot | harness-others.md |
 
 ## 4. Chat apps (chat profile)
 
