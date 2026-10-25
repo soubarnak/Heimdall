@@ -24,23 +24,11 @@ Heimdall picks one of three modes for each request and says which:
 
 ### Build mode
 
-```mermaid
-flowchart TD
-    A[Idea or SRS] --> G0[G0 Intake: classify, discovery research, bounded interview or SRS gap check]
-    G0 --> G05[G0.5 Codebase recon - existing repos only]
-    G05 --> G1[G1 Spec locked + briefing]
-    G1 --> G2[G2 Architecture: ADRs, module map, test seams, tracker, agent topology, standing authorization]
-    G2 --> G25[G2.5 Visual direction - UI builds]
-    G25 --> G3[G3 Ticket graph published to GitHub / Gitea / local files; bootstrap commit]
-    G3 --> L{Build loop}
-    L -->|frontier of unblocked, non-overlapping tickets| C[Coder agents: one git worktree each, test-first]
-    C --> R[Reviewer agents: fresh context, five axes]
-    R -->|changes requested| C
-    R -->|approved| M[Serial merger: fresh base, merge pre-check, full suite on the merged result]
-    M --> L
-    L -->|graph complete| G6[G6 QA: whole-build review, QA agent, fix tickets]
-    G6 --> G7[G7 Ship + operations handover]
-```
+<p align="center">
+  <img src="docs/assets/build-flow.svg" width="880" alt="How Heimdall builds software. You describe the idea. Heimdall calibrates and runs intake (G0). You sign off the spec (G1) and the architecture (G2), pick a visual direction (G2.5), and confirm the ticket graph (G3). The build loop (G4 to G5) picks ready tickets, runs test-first coders in their own worktrees, opens pull requests, reviews them in a fresh context, and merges them one at a time. A QA pass (G6) follows, and you sign off the release (G7).">
+</p>
+
+An interactive version with a worked example is on the [Heimdall Build Flow](https://claude.ai/artifact/8iZoMjQJP7SSHBh7mn9J8U) page (opens for people it has been shared with).
 
 G1, G2, and G7 always need your sign-off; G6 does too in Production mode. Between gates the build loop runs on its own and reports progress in the tracker: one issue per ticket, status labels, one pull request per ticket, and the merge commit on every closed ticket.
 
@@ -80,6 +68,7 @@ scripts/install.sh          installs the skill into every detected harness
 scripts/validate.sh         checks the skill format, index coverage, manifests, and secrets
 .claude-plugin/             Claude Code plugin and marketplace manifests
 docs/ADAPTATION_REPORT.md   how the original prompt bundle became this skill, and what was researched
+docs/assets/build-flow.svg  the Build mode diagram shown above
 INSTALL.md                  installation instructions for agents and humans
 ```
 
