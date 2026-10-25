@@ -34,7 +34,7 @@ If the ticket cannot be finished without changing anything else, stop and report
 </touch_set>
 
 <tdd>
-First, in the worktree, run the Install command from HANDOFF.md (`<…>`) and the full suite once: a fresh worktree has no installed dependencies, and the suite must be green before you start.
+First, in the worktree, run the Install command from HANDOFF.md (`<…>`): a fresh worktree has no installed dependencies. When HANDOFF defines a full-suite command (T01 creates it), run it once and expect green; if it is red before you change anything, stop and report `STATUS: BLOCKED: environment` with the output.
 Build test-first, one behavior at a time:
 1. Write one test for the next behavior, at a seam listed in the ticket, through the public interface only.
 2. Run that test file and see it fail because the behavior is missing (not a typo, import, or setup error). Commit: `test(T<nn>): <behavior>`.
