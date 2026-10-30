@@ -43,7 +43,7 @@ A checklist for running the build loop. Load it with STATE.md and HANDOFF.md at 
 |---|---|
 | `STATUS: DONE` | ticket checks |
 | `STATUS: BLOCKED: <kind>` | the section 8 row for that kind |
-| `STATUS: FAILED`, no report | executor-failure ladder: retry, tier bump, other family, then needs-human |
+| `STATUS: FAILED`, no report | executor-failure ladder: retry, tier bump, other family (roster agents only; outside the roster, ask), then needs-human |
 | `VERDICT: APPROVE` | merge queue |
 | `VERDICT: CHANGES_REQUESTED` | fix round (round + 1; counts toward the cap of 2) |
 | `VERDICT: STALE` | regenerate the review packet at the current head; not a round |

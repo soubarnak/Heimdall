@@ -2,6 +2,8 @@
 
 Who does what in Build mode. Each role gets its own context, a packet built from an asset template, and a fixed report format. Agents never talk to each other or to the user directly: everything flows through the orchestrator and the tracker.
 
+**The user chooses who fills each role.** At calibration the user picks the agent for each purpose (the agent roster, calibration.md, section 5). The tiers below are the minimums and the source of the roster's recommended rows, never a choice made for the user. The orchestrator is the session where the user invoked Heimdall.
+
 ## Roles at a glance
 
 | Role | Runs as | Writes | Never | Minimum tier |
@@ -31,7 +33,7 @@ Optional. At G0.5 it maps a brownfield repository into the Repo Report (assets/r
 
 Implements exactly one ticket, test-first (tdd-protocol.md), inside its touch set (merge-protocol.md, L3–L5). It starts from the integration tip in its own worktree, commits with the `test(T<nn>)` / `feat(T<nn>)` convention, syncs with the integration tip before reporting, runs the full suite, and ends with the return report (assets/return-report.md). It stops and reports instead of guessing when it hits a touch-set, seam, spec, environment, dependency, secret, or destructive-action question. Packet: assets/coder-packet.md.
 
-**Tier per ticket** (set at G3): Light = mechanical, one module, an obvious seam; Standard = a typical vertical slice; Frontier = cross-module, ambiguous, algorithmic, or security- or concurrency-critical work.
+**Tier per ticket** (set at G3): Light = mechanical, one module, an obvious seam; Standard = a typical vertical slice; Frontier = cross-module, ambiguous, algorithmic, or security- or concurrency-critical work. The ticket's tier selects the coder the user chose for that tier in the roster.
 
 ## Reviewer
 
@@ -45,7 +47,7 @@ Reviews one ticket at one head SHA in a fresh context, along five separate axes,
 
 Blocking findings: any Spec finding, hard Standards violations, TDD anti-patterns or missing red-first evidence (MVP and Production), any Security finding, any Scope finding. Smells are non-blocking unless they make the change wrong or unmaintainable; non-blocking findings go to the G6 cleanup list.
 
-**Family choice:** prefer a reviewer from a different model family than the coder — a different family catches errors the coder's family is blind to. Required in Production mode when the topology has a second family; recommended in MVP; optional in Prototype. Same-family review still uses a fresh context, never the coder's session.
+**Family choice:** prefer a reviewer from a different model family than the coder — a different family catches errors the coder's family is blind to. Required in Production mode when the topology has a second family; recommended in MVP; optional in Prototype. Same-family review still uses a fresh context, never the coder's session. The roster's recommended reviewer follows this rule, and the user's choice stands: in Production mode, a same-family reviewer chosen while another family is available is recorded in STATE.md's Accepted risks.
 
 ## Merger
 
@@ -62,7 +64,7 @@ At G6, runs the acceptance tests (one per Success Criterion), exercises the inte
 - **Sideways:** none. Agents never message each other; shared knowledge lives in files and the tracker.
 - **To the user:** never. Subagents and headless runs cannot ask questions reliably (harness-adapters.md); they stop and report, and the orchestrator asks.
 
-## Example topologies (recorded at G2)
+## Example topologies (offered as roster options at calibration, recorded at G2)
 
 | Setup | Orchestrator | Coders | Reviewer | Notes |
 |---|---|---|---|---|

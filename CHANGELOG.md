@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0 — 2026-10-30
+
+Heimdall now asks the user which agent serves each purpose before it dispatches any, instead of choosing them by rule. Before this release the first dispatches (discovery researchers at G0, the scout at G0.5) went to agents the user never saw, and the topology appeared only at G2.
+
+- The agent roster (calibration.md, section 5): in Build mode, including Build-lite, calibration always sends one message with a table of purposes: researcher, scout, coder for Light, Standard, and Frontier tickets, reviewer, merger, and QA agent. Each row has a recommended agent (harness, model, effort), the dispatch method it implies, and the alternatives detection found. The user answers up to three grouped questions (research, coding, review) plus the budget; "Just proceed" takes the recommended rows. Purposes already fixed by the user's instruction files are shown as decided, not asked. The orchestrator stays the session the user invoked.
+- Consent for another vendor's harness is given by choosing that agent in the roster; the row says it spends that vendor's quota and runs with that tool's permissions. G2 shows the roster for the record, and a change there needs the user's answer.
+- Only the user changes the roster. The executor-failure ladder's tier bump and family switch use only agents in the roster; a step that needs another agent becomes a `needs-human` question. The health check never swaps agents. On resume, a chosen agent that is missing becomes a question.
+- STATE.md's Topology line and HANDOFF's execution topology now hold the full roster (researcher, scout, coders per tier, reviewer, merger, QA). On resume, an older STATE.md is migrated as usual, and the purposes it records no agent for (scout, merger, QA) are asked.
+- Prompt mode is unchanged: Stage 8 still recommends a model for prompts run elsewhere.
+
 ## 1.3.1 — 2026-10-26
 
 Fixes from a second live Light-tier run (Haiku orchestrator, headless Sonnet coder and reviewer, ticket T02 on the local path). The ticket merged, but the orchestrator started a duplicate coder, the reviewer searched the disk for a skill file, and STATE.md kept a stale integration tip. The launch and grant rules now apply to every harness, not only Claude Code.

@@ -3,7 +3,7 @@ name: heimdall
 description: Idea-to-shipment orchestration for building software with coordinated AI agents. Takes a vague idea or a complete SRS, researches what the user does not know, locks a spec and architecture through decision gates, breaks the work into a ticket graph on GitHub issues, Gitea issues, or local files, then runs parallel test-first coder agents (one git worktree per ticket), fresh-context reviewer agents, and a serial merger so work lands without merge conflicts, through QA to release. Harness- and model-agnostic (Claude Code, Codex CLI, Muse Code, OpenCode, pi, Gemini and Antigravity CLI, Qwen Code, Vibe, Grok Build, Kimi, Cursor, Copilot; Claude, GPT, Muse, DeepSeek, Qwen, Gemini, Mistral, Grok, Kimi, GLM, MiniMax). Also writes optimized prompts and model recommendations. Use when the user wants an app or feature built from an idea or SRS, says "use Heimdall" or "take this idea to shipment", or wants a prompt optimized for a specific model.
 compatibility: Agent profile needs a shell and git 2.38 or later. GitHub tracking needs gh; Gitea tracking needs tea; parallel agents need subagents or a headless agent CLI. Chat apps without tools run the planning gates and hand the build loop to a coding agent.
 metadata:
-  version: "1.3.1"
+  version: "1.4.0"
   author: soubarnak
   repository: https://github.com/soubarnak/Heimdall
 ---
@@ -14,7 +14,7 @@ Heimdall turns an idea or a Software Requirements Specification into a shipped a
 
 ## Step 0 — Calibrate
 
-Run calibration.md before anything else: resume check, harness and profile detection, model tier, environment checks, at most one question, then lock the Session Capability Profile.
+Run calibration.md before anything else: resume check, harness and profile detection, model tier, environment checks, at most one calibration message, then lock the Session Capability Profile. In Build mode that message always asks the user which agent serves each purpose (the agent roster).
 
 ## Route — pick one mode and say which
 
@@ -50,6 +50,7 @@ A visual progress report (`.heimdall/PROGRESS.md`, plus `progress.html` at G2.5,
 - **Informed decisions.** Proactive research answers what documentation can; knowledge gaps get advisor stance; every recommendation names its evidence; the user takes the calls (project-research.md, research-advisor-playbook.md).
 - **No merge conflicts by construction.** Touch sets, hotspot locks, a scaffold ticket, one worktree per coder, a fresh base before review, and one serial merger (merge-protocol.md). This makes conflicts rare and mechanical; it cannot make them impossible. Semantic conflicts are caught by the full suite on every merged result before it lands. Never claim "zero conflicts guaranteed".
 - **Test-first at agreed seams**, with red-first evidence that reviewers audit (tdd-protocol.md).
+- **Your agents, your choice.** Before any agent is dispatched, Heimdall asks which agent serves each purpose and recommends one for each; it never dispatches an agent the user did not choose (calibration.md, section 5).
 - **Independent review.** A reviewer is never the coder; a different model family when available (agent-roles.md).
 - **Progress you can see** in the tracker (one issue per ticket, labels for status, one PR per ticket, the merge SHA on every closed ticket) and in the visual progress report, which cites that evidence for every done item.
 
@@ -57,7 +58,7 @@ A visual progress report (`.heimdall/PROGRESS.md`, plus `progress.html` at G2.5,
 
 | File | Contains | Consult at |
 |---|---|---|
-| references/calibration.md | harness, model, and environment detection; the session profile | Step 0, every session |
+| references/calibration.md | harness, model, and environment detection; the agent roster question; the session profile | Step 0, every session |
 | references/workflow-stages.md | routing (Stages 1–7, complexity C0–C3) and prompt construction (Stages 8–15) | every request; every packet |
 | references/intake.md | idea path vs SRS path, gap check, spec shape, G1 lock | G0–G1 |
 | references/project-research.md | automated research program, architecture decisions and ADRs, user briefings (decide, do, learn) | G0, G2, G3, G7 |
@@ -65,14 +66,14 @@ A visual progress report (`.heimdall/PROGRESS.md`, plus `progress.html` at G2.5,
 | references/production-orchestrator.md | Build mode: profiles, `.heimdall/` layout, operating modes, gates G0–G7, budgeting, resume, artifact rules, the progress report, failures, change requests, safety | all of Build mode |
 | references/execution-loop.md | tracker contract, scheduler, dispatch, ticket checks, review, merge, failure routing, concurrency, demo checkpoint, resume, fallbacks | G3 publish; G4–G5 |
 | references/loop-card.md | the build loop on one page: scheduler pass, one ticket start to finish, check codes, report tokens, resume | every G4–G5 session |
-| references/agent-roles.md | orchestrator, researcher, scout, coder, reviewer, merger, QA: duties, limits, tiers, status tokens, topologies | G2 topology; every dispatch |
+| references/agent-roles.md | orchestrator, researcher, scout, coder, reviewer, merger, QA: duties, limits, tiers, status tokens, topologies | calibration (agent roster); G2 topology; every dispatch |
 | references/merge-protocol.md | the seven layers that prevent merge conflicts; merge and conflict procedures | G2, G3, every merge |
 | references/tdd-protocol.md | test-first at agreed seams, anti-patterns, mocking, red-first evidence and audit | G2 seams; every coder and reviewer packet; Direct mode |
 | references/tracker-github.md | `gh` commands for every tracker operation | GitHub builds |
 | references/tracker-gitea.md | `tea` commands for every tracker operation | Gitea builds |
 | references/tracker-local.md | file-based tickets and local merges | no remote tracker |
 | references/checklist-and-grading.md | 22-item checklist, ≥95% threshold, A–D grades | every packet and gate lock |
-| references/agent-model-map.md | tier → model id, effort, and selection flag per family and harness; role defaults | G2; every packet's "For:" line |
+| references/agent-model-map.md | tier → model id, effort, and selection flag per family and harness; role defaults | calibration (agent roster); G2; every packet's "For:" line |
 | references/harness-adapters.md | dispatch methods and their rules, skill directories, instruction files, question tools; routes to one file per harness | G2; every dispatch |
 | references/harness-claude-code.md | Claude Code subagents, headless commands per role, grants | when the topology uses Claude Code |
 | references/harness-codex.md | Codex CLI subagents, headless commands per role, sandbox roots | when the topology uses Codex |

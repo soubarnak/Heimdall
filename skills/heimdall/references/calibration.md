@@ -1,10 +1,10 @@
 # Calibration — Step 0 of Every Session
 
-Run before any other work, on the first message of a session that invokes Heimdall. Calibration is mostly **detection**, not questions: at most one calibration question, and none when the evidence is clear.
+Run before any other work, on the first message of a session that invokes Heimdall. Calibration is mostly **detection**, with at most one calibration message (section 5; a second round only when the user changes single roster rows or a question is still open). In Build mode that message is always sent, because it asks the user which agent serves each purpose (the agent roster). In the other modes it is sent only when the evidence is unclear.
 
 ## 1. Resume check
 
-- Agent profile: if `.heimdall/STATE.md` exists in the project, this is a resumed build. Run sections 2–4 as usual (detection only), skip the question in section 5, then follow the resume protocol (production-orchestrator.md, section 5): it compares what you detected with the recorded profile, applies the tier rules to the model running now, and migrates STATE.md. Section 6 updates the profile in STATE.md.
+- Agent profile: if `.heimdall/STATE.md` exists in the project, this is a resumed build. Run sections 2–4 as usual (detection only), skip the message in section 5 (the roster is already in STATE.md), then follow the resume protocol (production-orchestrator.md, section 5): it compares what you detected with the recorded profile, applies the tier rules to the model running now, and migrates STATE.md. Section 6 updates the profile in STATE.md.
 - Chat profile: if the message contains a pasted STATE.md, the same applies.
 - A repository with a GitHub or Gitea remote but no `.heimdall/` folder may be a build started on another machine: look for an open issue labelled `heimdall:spec` (`gh issue list --label heimdall:spec` / `tea issues list --labels heimdall:spec`). If one exists, it is a resumed build (the resume protocol rebuilds `.heimdall/` from it).
 
@@ -46,22 +46,35 @@ tea login list 2>/dev/null           # login names and hosts only
 ls AGENTS.md CLAUDE.md .heimdall 2>/dev/null
 ```
 
-These answers decide: greenfield or brownfield, the tracker candidates (execution-loop.md, section 2), and which harnesses can serve as headless coders, reviewers, or researchers in the topology (agent-roles.md). A headless-capable browser (Chromium or Chrome, or the harness's own browser tool) lets the progress report carry screenshots of the design screens; without one, the report embeds the HTML screens instead.
+These answers decide: greenfield or brownfield, the tracker candidates (execution-loop.md, section 2), and which harnesses and models the agent roster can offer for each purpose (section 5; agent-roles.md). A headless-capable browser (Chromium or Chrome, or the harness's own browser tool) lets the progress report carry screenshots of the design screens; without one, the report embeds the HTML screens instead.
 
 - **No repository:** an empty folder or loose files. Greenfield; G0 runs `git init -b main` (production-orchestrator.md, G0).
 - **No git identity:** the bootstrap commit at G3 would fail. G0 asks the user to set one for this repository; never set it yourself.
 - **No remote:** the local tracker, unless the user accepts the G2 offer of a new private repository.
-- **The instructions already loaded in this session** (user-level and project-level instruction files such as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, or the project's AGENTS.md) may fix models, effort, or which agent handles which kind of work. They override Heimdall's defaults: build the topology within them and record each override in STATE.md's Topology line (for example "coders: user rule → Sonnet at medium"). Headless runs load the same user-level files.
+- **The instructions already loaded in this session** (user-level and project-level instruction files such as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, or the project's AGENTS.md) may fix models, effort, or which agent handles which kind of work. They override Heimdall's defaults: the agent roster (section 5) shows each purpose they fix as already decided, marked "from your instructions", and does not ask about it again. Record each override in STATE.md's Topology line (for example "coders: user rule → Sonnet at medium"). Headless runs load the same user-level files.
 
-## 5. The one calibration question (only if needed)
+## 5. The calibration message
 
-Ask only what detection cannot answer, in one message, using the harness's question tool (harness-adapters.md, section 2) or numbered options, with one option marked "(Recommended)" from the evidence (budget: standard when nothing points either way):
+One message, using the harness's question tool (harness-adapters.md, section 2) or numbered options. Every question in it has one option marked "(Recommended)" from the evidence (workflow-stages.md, Stage 6). It can hold:
 
-- the **budget**: tight (small plan or rate limits — fewer agents, fewer research questions), standard, or generous (many parallel agents);
+- the **agent roster**: Build mode (Build-lite included) only, and always asked there (below), except when section 3 makes this session decline the gate; Build-lite on "orchestrate anyway" still asks it;
+- the **budget**: tight (small plan or rate limits — fewer agents, fewer research questions), standard, or generous (many parallel agents); recommended: standard when nothing points either way;
 - the model or effort, only if you could not determine it.
 
-Skip the question entirely when the user's request already states these, or the work is Direct mode.
+Skip any question the user's request already answers. Skip the message entirely in Direct mode, and in Prompt mode when nothing is unclear.
+
+### The agent roster (Build mode)
+
+Heimdall never picks the agents on its own. Before the first dispatch (discovery researchers start at G0), ask the user which agent serves each purpose. When the mode is not yet certain at calibration, send the roster as the first message of Build mode, before G0's discovery research.
+
+1. **Show the roster** as a table, one row per purpose: researcher (G0–G2 and per-ticket research), scout (G0.5 and loop pre-reads; brownfield only), coder for Light tickets, coder for Standard tickets, coder for Frontier tickets, reviewer, merger (conflicts only; the orchestrator does clean merges), and QA agent (G6). Each row shows the recommended agent (harness, model, effort), the dispatch method that agent implies (harness-adapters.md, section 1), and the alternatives available.
+2. **Recommended rows** come from the role defaults in agent-model-map.md (the lowest capable tier), the purposes the instruction files fix (section 4), and agent-roles.md's family rule (a reviewer from another family when one is available). **Alternatives** are only what detection found: the session's own harness and models, the harnesses on `PATH` (section 4), and "my own tool" (user-driven). In the chat profile detection cannot see the user's tools: offer the families in agent-model-map.md, and the coding-agent harness that takes over the loop confirms on resume that each chosen agent is available there.
+3. **Ask** with up to three questions, one per group: research (researcher, scout), coding (the three coder tiers), and review (reviewer, merger, QA agent). The budget is the fourth. The first option of each group is its recommended rows; the others are real alternatives, such as another vendor's agent or a cheaper or stronger set, and the user may name their own. A group that the instruction files fix entirely is shown in the table, not asked. When the model or effort question is also needed, or the user wants to change single rows, a second round follows (at most two rounds).
+4. **Name what another vendor costs.** A row that uses another vendor's harness says so: the run spends that vendor's quota and runs with that tool's permissions. Choosing that row is the consent production-orchestrator.md, section 2, requires.
+5. **Record** the answers as the roster in the session profile (section 6). "Just proceed" takes the recommended rows: record them as the roster and state them as assumptions (workflow-stages.md, Stage 6). From then on only the user changes the roster: at G2, on resume when a chosen agent is missing, or through a `needs-human` question from the loop (execution-loop.md, section 8). Never dispatch to an agent the user did not choose.
+
+The orchestrator is not a roster row: it is the session the user invoked, and its tier rules are in section 3.
 
 ## 6. Lock the Session Capability Profile
 
-Record: harness, model, effort, tier, profile (agent / chat), budget, question tool, available executor CLIs, tracker candidates. In Build mode it goes into STATE.md; in Prompt mode it is printed in every Delivery. Tell the user once: "Please don't change model or effort mid-session — if you must, tell me and I'll recalibrate."
+Record: harness, model, effort, tier, profile (agent / chat), budget, question tool, available executor CLIs, tracker candidates, and in Build mode the agent roster. In Build mode it goes into STATE.md (the roster in its Topology line); in Prompt mode it is printed in every Delivery. Tell the user once: "Please don't change model or effort mid-session — if you must, tell me and I'll recalibrate."

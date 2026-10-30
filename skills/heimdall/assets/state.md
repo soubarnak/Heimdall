@@ -7,7 +7,7 @@ Mode: <Build | Build-lite>   Operating mode: <Prototype | MVP | Production>   Cl
 Orchestrator: <harness> / <model> / effort <level>   Budget: <tight | standard | generous>
 Tracker: <GitHub owner/repo | Gitea host/owner/repo | local>   Edges: <native | body>   Merge path: <pr | local>
 Integration: <branch> @ <sha>   Worktree root: <path>   Cap: <n> coders
-Topology: coders <tier → harness/model>; reviewer <harness/model>; researchers <harness/model>
+Topology (the user's agent roster): researcher <harness/model>; scout <harness/model | none>; coders <Light → harness/model, Standard → harness/model, Frontier → harness/model>; reviewer <harness/model>; merger <orchestrator | harness/model>; QA <harness/model>
 Gates locked: <G1 YYYY-MM-DD, G2 …>   Accepted risks: <grade exceptions, "loop orchestrated at Light tier", or "none">
 Current: <gate, "G3 confirmed, publish pending", or "build loop">
 Tracker comments: progress <comment id | none>; snapshot <comment id(s) | none>   Demo: <not yet | YYYY-MM-DD after wave <n>: <command or URL>>

@@ -64,7 +64,7 @@ Triggered by knowledge gaps. Full procedure: research-advisor-playbook.md. In Bu
 
 ## Stage 6 — Clarification Agent (conditional, user-facing)
 
-**Questioning is DERIVED, never improvised.** Questions map 1:1 from unmet critical items in the active decision set (Prompt mode: the checklist's critical items; Build mode: the current gate's decision set — G1 problem/users/stories/success/out-of-scope/mode, G2 architecture/seams/tracker/topology/authorization, G3 ticket granularity and edges) minus everything already in Settled Decisions or answered. Empty remainder = zero questions. Because questions come from templates, interview quality does not depend on the model; smaller models cut synthesis and critique, never the question derivation.
+**Questioning is DERIVED, never improvised.** Questions map 1:1 from unmet critical items in the active decision set (Prompt mode: the checklist's critical items; Build mode: the current gate's decision set — calibration agent roster and budget, G1 problem/users/stories/success/out-of-scope/mode, G2 architecture/seams/tracker/topology/authorization, G3 ticket granularity and edges) minus everything already in Settled Decisions or answered. Empty remainder = zero questions. Because questions come from templates, interview quality does not depend on the model; smaller models cut synthesis and critique, never the question derivation.
 
 Task-type templates: bug → reproduction set; UI → references or mockups, never verbal descriptions; refactor → intent + risk tolerance + scope boundary; content → audience and tone; greenfield → scope and success.
 
@@ -105,7 +105,7 @@ For changes to an existing codebase: the CODEBASE is the source of truth for con
 
 ## Stage 8 — Model Selector
 
-Budget rule: recommend the LOWEST capable tier — Light, Standard, or Frontier — and never default upward "to be safe." Translate the tier to a concrete model with agent-model-map.md for the harness and family that will run it. One-line reason. If the user deviates, don't argue — apply Stage 10's compensation layer.
+Budget rule: recommend the LOWEST capable tier — Light, Standard, or Frontier — and never default upward "to be safe." Translate the tier to a concrete model with agent-model-map.md for the harness and family that will run it. One-line reason. If the user deviates, don't argue — apply Stage 10's compensation layer. In Build mode the agent for each role comes from the roster the user chose (calibration.md, section 5); Stage 8 sets only a ticket's tier.
 
 ## Stage 9 — Prompt Architect
 

@@ -14,12 +14,12 @@ Use this file to: detect the harness (calibration.md), pick the dispatch method 
 
 ## 1. Dispatch methods
 
-Pick one per role at G2 and record it in Settled Decisions (the execution topology). Prefer the first that the harness supports. Coders always work in their own worktree (merge-protocol.md, L4): a subagent gets the absolute worktree path and does all work there (`git -C <worktree> …` or `cd <worktree>`); a headless run starts with the worktree as its working directory.
+The method for each role follows from the agent the user chose for it (the agent roster, calibration.md, section 5): the session's own harness runs subagents, or the same session when it has none; another harness runs headless; and a GUI tool is user-driven. When the chosen agent supports several methods, prefer the first in the table. G2 records the methods in Settled Decisions (the execution topology). Coders always work in their own worktree (merge-protocol.md, L4): a subagent gets the absolute worktree path and does all work there (`git -C <worktree> …` or `cd <worktree>`); a headless run starts with the worktree as its working directory.
 
 | Method | When | How |
 |---|---|---|
 | **Subagent** | Harness has subagents (Claude Code, Codex, Muse Code, OpenCode, Gemini CLI, Cursor) | Spawn a background child with the packet's Prompt section, the pinned model and effort, and write access to its worktree. Its final message is the report; save it to `.heimdall/reports/`. |
-| **Headless harness** | Executor is a different harness or vendor (tandem), or the user wants isolation | Run the harness's non-interactive command (its file in section 3) with the packet file as input. Needs explicit user consent: it spends that vendor's quota and runs with that tool's permissions. |
+| **Headless harness** | Executor is a different harness or vendor (tandem), or the user wants isolation | Run the harness's non-interactive command (its file in section 3) with the packet file as input. Needs explicit user consent, given by choosing that agent in the roster: it spends that vendor's quota and runs with that tool's permissions. |
 | **Same session** | No subagents (pi without extensions) or a tiny packet | Checkpoint STATE.md, adopt the role, follow the packet exactly in the worktree, write the report, switch back. Cap 1 (execution-loop.md, section 10). |
 | **User-driven** | Executor is a GUI tool (Cursor, Copilot in an IDE) or the user wants control | Emit numbered next steps (production-orchestrator.md, section 6). |
 

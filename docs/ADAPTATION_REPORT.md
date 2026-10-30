@@ -1,6 +1,6 @@
 # Heimdall Adaptation Report
 
-How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill that takes an idea or an SRS to a shipped application. Written 2026-10-25 for version 1.0.0; updated 2026-10-26 for 1.1.0 (visual progress report, G2.5 prototype) 1.2.0 (loop audit, section 17), and 1.3.0 (review and live Light-tier run, section 18).
+How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill that takes an idea or an SRS to a shipped application. Written 2026-10-25 for version 1.0.0; updated 2026-10-26 for 1.1.0 (visual progress report, G2.5 prototype) 1.2.0 (loop audit, section 17), 1.3.0 (review and live Light-tier run, section 18), and 1.3.1 (headless launch and grants, section 19); updated 2026-10-30 for 1.4.0 (the user chooses the agents, section 20).
 
 ## Contents
 
@@ -23,6 +23,8 @@ How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill
 17. Audit and fixes (2026-10-26)
 18. Review and live Light-tier run (2026-10-26, version 1.3.0)
 19. Headless launch and grants for every harness (2026-10-26, version 1.3.1)
+20. The user chooses the agents (2026-10-30, version 1.4.0)
+
 ## 1. Summary
 
 The original repository held eight knowledge files for a claude.ai Project. Together they made Claude act as a prompt optimizer and as a "production orchestrator" that planned software through gates and then handed copy-paste packets to a separate coding agent, with the user ferrying reports back by hand. It assumed Claude models, the claude.ai interface, and Claude plan tiers throughout.
@@ -32,7 +34,7 @@ The adaptation keeps that design's best ideas — calibration, complexity routin
 - **One installable Agent Skill** (`skills/heimdall/`) instead of loose knowledge files: a 113-line `SKILL.md` entry point, 32 references loaded on demand, 24 asset templates, and one script (`scripts/ticket-checks.sh`) copied into each project.
 - **It runs the build itself.** In an agent harness, Heimdall publishes a ticket graph to GitHub issues, Gitea issues, or local files, dispatches test-first coder agents into isolated git worktrees, sends every change to a fresh-context reviewer, and lands changes through one serial merger. The user signs off at a few gates instead of relaying every packet.
 - **It informs the user.** A Researcher role researches proactively at intake, architecture, and per ticket; every significant architecture choice becomes an ADR; briefings at G1, G2, and G7 say what was decided, what the user must decide, do, and learn, and what the risks and costs are.
-- **It is harness- and model-agnostic.** Detection replaces the old model/plan-tier question; 13 harnesses have adapters; 11 model families have prompting guides verified against vendor documentation on 2026-10-25; a tier map turns "Light / Standard / Frontier" into concrete model ids and selection flags per harness.
+- **It is harness- and model-agnostic.** Detection replaces the old model/plan-tier question, and in Build mode the user chooses the agent for each purpose from what detection found (section 20); 13 harnesses have adapters; 11 model families have prompting guides verified against vendor documentation on 2026-10-25; a tier map turns "Light / Standard / Frontier" into concrete model ids and selection flags per harness.
 - **It installs from the repository URL.** The README and INSTALL.md are written for an agent: a harness table, one universal install command, native alternatives, verification, update, and uninstall, backed by `scripts/install.sh` for every harness.
 
 ## 2. What the original repository was
@@ -114,10 +116,11 @@ Defects found while reading it:
 
 | Gate | What happens | Sign-off |
 |---|---|---|
+| Calibration | Detection, then one message; in Build mode it always asks which agent serves each purpose (the agent roster), with a recommended agent per purpose | — |
 | G0 Intake | Classify the input (idea, PRD, SRS); discovery research; bounded interview (at most 4 questions per message, 2 rounds, one recommended answer per question) or SRS gap check | — |
 | G0.5 Recon | Brownfield only: a Scout maps the existing codebase into a repo report | — |
 | G1 Spec | Spec locked from assets/spec.md with user stories, success criteria, NFRs, testing decisions, traceability to SRS ids; operating mode chosen; briefing | Mandatory |
-| G2 Architecture | Researched options, ADRs, module map planned for parallel work, hotspot plan, test seams, tracker choice, integration branch, agent topology (which harness and model per role), standing authorization for routine outward actions; briefing | Mandatory |
+| G2 Architecture | Researched options, ADRs, module map planned for parallel work, hotspot plan, test seams, tracker choice, integration branch, agent topology (the agent roster the user chose at calibration, with a dispatch method per role), standing authorization for routine outward actions; briefing | Mandatory |
 | G2.5 Visual direction | UI builds: 2–3 mockups, the user's pick, a prototype of the core screens, design contract | Recommended |
 | G3 Ticket graph | Vertical-slice tickets with acceptance criteria, seams, touch sets, hotspot locks, size and risk, blocking edges; published to the tracker; bootstrap commit | Recommended |
 | G4–G5 Build loop | Scheduler: sync, collect reports, merge approved work, compute the frontier (ready, unblocked, disjoint touch sets and hotspots), order by critical path, dispatch up to the concurrency cap (default 3), checkpoint | Informational |
@@ -192,7 +195,7 @@ Consequences built into the design:
 - One copy in `~/.agents/skills/heimdall` serves every harness except Claude Code and Qwen Code; the installer adds those two folders.
 - Claude Code reads `AGENTS.md` only when no `CLAUDE.md` exists, so Heimdall writes a `CLAUDE.md` containing `@AGENTS.md` in projects it builds (this repository does the same).
 - Subagents and headless runs cannot ask the user questions in any harness, so gates always run in the orchestrating session and packets tell executors to stop and report.
-- Permission-bypass flags are never passed unless the user asks for that run. Headless dispatch to another vendor's CLI requires the user's consent because it spends that vendor's quota.
+- Permission-bypass flags are never passed unless the user asks for that run. Headless dispatch to another vendor's CLI requires the user's consent because it spends that vendor's quota; the user gives it by choosing that agent in the roster.
 - Calibration detects the harness from its tools (and `CLAUDECODE=1` in Claude Code) instead of asking.
 
 ## 11. Model coverage and prompting research
@@ -263,7 +266,7 @@ Risks to watch:
 
 - Model names and harness flags change quickly. agent-model-map.md, the family files, harness-adapters.md, and the per-harness files are the only places to update; no logic depends on specific names.
 - GitHub issue dependencies and Gitea dependencies can be disabled per instance or repository; the tracker files define a body-section fallback and record which representation is in use.
-- Parallel coders multiply cost. The concurrency cap defaults to 3 and calibration asks about budget when it cannot infer it.
+- Parallel coders multiply cost. The concurrency cap defaults to 3 and calibration asks about budget when it cannot infer it (in Build mode, in the same message as the agent roster).
 
 ## 15. Assumptions made
 
@@ -319,3 +322,19 @@ Decisions:
 Re-run on 2026-10-26 with the 1.3.1 rules (Haiku orchestrator, four headless Claude Code runs, about $2): each run was launched once with `exec` and waited on with `kill -0`, and the raw JSON and log files sat beside the reports. The reviewer grants were `Bash(node --test:*)` and `Bash(npm run lint:*)`, and no packet named a skill file. STATE.md recorded the Light-tier accepted risk, the `Head` column, the cost and the refused commands in Health, and `Integration:` at the merge SHA. Two smaller slips followed. The orchestrator once read the PID from a `ps` search, caught a wrapper process, and corrected itself. The `Progress report:` line was not updated after a refresh. Both now have a rule.
 
 Verified for this change: `codex exec --help`, `muse exec --help`, `pi --help`, and `agy --help` on the installed CLIs, and the OpenCode v2 agents and permissions docs, all on 2026-10-26. What `ask` does in `opencode run`, whether agy's plan mode may run tests, and Muse permission-profile contents remain UNVERIFIED.
+
+## 20. The user chooses the agents (2026-10-30, version 1.4.0)
+
+Until 1.3.1, Heimdall chose every agent by rule: the role defaults in agent-model-map.md, the harnesses found on `PATH`, and the family rule for reviewers. The user first saw the result at G2, inside the "accept every recommendation" sign-off. By then the discovery researchers (G0) and the scout (G0.5) had already been dispatched to agents the user never chose, and the executor-failure ladder could later switch a ticket to another tier or family without asking. The user asked for Heimdall to ask which agents to use for which purpose before deciding.
+
+Decisions:
+
+- **Ask at calibration, before the first dispatch.** G2 is too late, because researchers start at G0. The agent roster takes the place of calibration's single question in Build mode (Build-lite included), and the budget question moves into the same message. A second round is allowed only when the user changes single rows or a question is still open. This narrows the 1.0.0 decision that detection replaces the model question: detection still decides what can be offered, and the user decides what is used.
+- **One row per purpose, grouped into at most three questions.** The rows are researcher, scout, coder per tier (Light, Standard, Frontier), reviewer, merger, and QA agent. The groups are research, coding, and review, and the budget is the fourth question, which keeps the message within the Stage 6 bounds. Every row has a recommended agent from agent-model-map.md, the user's instruction files, and the family rule. The alternatives are limited to what detection found, plus the user's own tool.
+- **The orchestrator is not a row.** It is the session the user invoked, and its tier rules are unchanged.
+- **Instruction files are not re-asked.** A purpose that `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, or the project's AGENTS.md already fixes appears as decided and is recorded as an override.
+- **Consent moves to the roster.** Choosing another vendor's agent is the consent for headless dispatch, because that is the moment the vendor is picked. The row says that the run spends that vendor's quota and runs with that tool's permissions. G2 still names the consent in its sign-off.
+- **Only the user changes the roster.** At G2, Heimdall shows the roster for the record and may propose a change with its reason. On resume, a chosen agent that is no longer available becomes a question. In the loop, the tier bump and the family switch use only agents in the roster, and anything outside it becomes a `needs-human` question. The health check reports problems and never swaps agents.
+- **Prompt mode is unchanged.** Stage 8 still recommends a model for prompts the user will run elsewhere. Inside Build mode, Stage 8 sets only a ticket's tier, and the roster supplies the agent.
+
+No model or harness facts changed, so the verification dates in agent-model-map.md and the harness files stay as they are.

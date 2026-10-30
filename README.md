@@ -113,7 +113,7 @@ After installing, start a new session in your project folder and invoke Heimdall
 | A small change | `/heimdall Add CSV export to the reports page.` |
 | A prompt for a specific model | `/heimdall Optimize this prompt for Gemini: <your prompt>` |
 
-Heimdall first calibrates: it detects the harness, the model, and the tools available, and asks at most one question (usually your budget). Then it names the mode it picked — Build, Build-lite, Direct, or Prompt — and why. Say so if you want a different one. In an existing repository it maps the codebase first (G0.5), works on a `heimdall/<project-slug>` integration branch, and opens a release pull request to your default branch at the end.
+Heimdall first calibrates: it detects the harness, the model, and the tools available. In Build mode it then asks which agent you want for each purpose (research, coding per ticket tier, review, merging, QA) and recommends one for each from the tools it found; it never dispatches an agent you did not choose. Otherwise it asks at most one question (usually your budget). Then it names the mode it picked — Build, Build-lite, Direct, or Prompt — and why. Say so if you want a different one. In an existing repository it maps the codebase first (G0.5), works on a `heimdall/<project-slug>` integration branch, and opens a release pull request to your default branch at the end.
 
 ### Answering questions
 
@@ -129,7 +129,7 @@ Heimdall first calibrates: it detects the harness, the model, and the tools avai
 | G0 Intake | the classification, a discovery research digest, and a few questions (or a gap check of your SRS) | answer, or say "Just proceed" |
 | G0.5 Recon (existing code only) | a short report on the codebase | confirm |
 | G1 Spec | the spec with user stories and success criteria, its grade, the operating mode, and a briefing | **sign off**, or ask for changes |
-| G2 Architecture | decision blocks with recommendations, ADRs, test seams, the tracker, the agent topology, the standing authorization, a setup packet, and a briefing | **sign off**; do the briefing's "What you need to do" items (accounts, keys set by name) |
+| G2 Architecture | decision blocks with recommendations, ADRs, test seams, the tracker, the agent topology (the agents you chose at calibration, shown for the record), the standing authorization, a setup packet, and a briefing | **sign off**; do the briefing's "What you need to do" items (accounts, keys set by name) |
 | G2.5 Design (UI builds) | 2–3 mockups of the key screen, then a prototype of the core screens in the direction you picked | pick one; confirm the prototype |
 | G3 Tickets | a numbered ticket list with dependencies and waves, including one end-to-end acceptance test per success criterion | confirm; Heimdall publishes the tickets and makes the bootstrap commit |
 | G4–G5 Build loop | tracker updates, progress reports, and one demo once the first user journey works | nothing, unless it stops for you; try the demo and say what feels wrong |

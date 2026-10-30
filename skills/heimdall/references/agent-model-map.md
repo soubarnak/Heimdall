@@ -1,6 +1,6 @@
 # Agent-Model Map
 
-Read at G2 (execution topology) and for every packet's "For:" line. Heimdall recommends a **tier** per role and per ticket; this file translates the tier into a concrete model, an effort level, and the flag that selects them in each harness. Verified 2026-10-25 from the family files; when vendors ship new models, edit this file and the family file only — no logic changes.
+Read at calibration (the recommended rows of the agent roster, calibration.md, section 5), at G2 (execution topology), and for every packet's "For:" line. Heimdall recommends a **tier** per role and per ticket, and the user chooses the agent for each purpose; this file translates the tier into a concrete model, an effort level, and the flag that selects them in each harness. Verified 2026-10-25 from the family files; when vendors ship new models, edit this file and the family file only — no logic changes.
 
 ## Tiers
 
@@ -11,6 +11,8 @@ Read at G2 (execution topology) and for every packet's "For:" line. Heimdall rec
 Budget rule: recommend the LOWEST capable tier; never default upward "to be safe". Raise effort before raising tier.
 
 ## Role defaults
+
+The recommended answer for each roster row; the user's choice replaces it.
 
 | Role | Tier | Effort |
 |---|---|---|

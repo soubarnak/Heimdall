@@ -13,7 +13,7 @@
 - Deployment target: <…> — ADR 0002
 - Tracker: <GitHub owner/repo | Gitea host/owner/repo | local> — merge path <pr | local>
 - Integration branch: <main | heimdall/<project-slug>> — worktree root <path>
-- Execution topology: orchestrator <harness/model/effort>; coders <tier → harness/model/effort>; reviewer <harness/model/effort, family>; merger <orchestrator | harness/model>; researchers <harness/model>; cap <n> coders
+- Execution topology (the agent roster the user chose at calibration; only the user changes it): orchestrator <harness/model/effort>; researcher <harness/model>; scout <harness/model | none>; coders <tier → harness/model/effort>; reviewer <harness/model/effort, family>; merger <orchestrator | harness/model>; QA <harness/model>; cap <n> coders
 - Standing authorization (G2): <"as defined in production-orchestrator.md, section 8" | that list with the user's changes, e.g. "minus pushes: merge path local, pushes at approved checkpoints">.
 - Framework: <none — Heimdall runs TDD, tickets, and review itself | superpowers | compound-engineering | mattpocock-skills (optional entry points, framework-capability-map.md)>
 
