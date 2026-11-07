@@ -20,7 +20,7 @@ A checklist for running the build loop. Load it with STATE.md and HANDOFF.md at 
 | Claim | ready → in-progress; STATE.md: agent, round, start time | execution-loop.md, section 5, step 1 |
 | Worktree | `git worktree add -b heimdall/t<nn>-<slug> <worktree-root>/t<nn>-<slug> <integration-branch>`; reuse one that exists | section 5, step 2 |
 | Packet | assets/coder-packet.md → `.heimdall/packets/T<nn>-coder-<round>.md`; grade it | section 5, step 3 |
-| Dispatch | the topology's method; a headless run starts in the background with `exec`, its PID goes into STATE.md In flight; never a second run while that PID is alive | section 5, step 4; harness-adapters.md, section 1 |
+| Dispatch | pre-flight first: the packet's `For:` line, the roster row, and the flags agree, with model and effort explicit and never `inherit` (model-plan.md, section 4); then the topology's method; a headless run starts in the background with `exec`, its PID goes into STATE.md In flight; never a second run while that PID is alive | section 5, step 4; harness-adapters.md, section 1 |
 | Collect | only after the PID has exited (`kill -0` fails): the final message → `.heimdall/reports/T<nn>-coder-<round>.md` | section 5, step 5 |
 | Check | `bash .heimdall/ticket-checks.sh …` with the exact flags in section 5, step 6 (`--help` lists them) → `.heimdall/reports/T<nn>-checks-<round>.md`; route its codes (below) | section 5, step 6 |
 | Push and PR | merge path `pr`: push the branch; round 1 opens the PR; record Head; status in-review | section 5, step 7 |
@@ -52,8 +52,8 @@ A checklist for running the build loop. Load it with STATE.md and HANDOFF.md at 
 
 ## Stop for the user only on
 
-`needs-human` items (batched, at most 4 per message, one recommended answer each) · the health rule · a revision loop to G2 or G3 · an outward action outside the standing authorization · the demo checkpoint.
+`needs-human` items (batched, at most 4 per message, one recommended answer each) · the health rule · a revision loop to G2 or G3 · an outward action not covered by an approval (production-orchestrator.md, section 8) · a model mismatch (execution-loop.md, section 8) · a switch point (model-plan.md, section 3) · the demo checkpoint.
 
 ## Resume (production-orchestrator.md, section 5; execution-loop.md, section 9)
 
-Calibrate again (detection only), migrate STATE.md to the current shape, reconcile with the tracker, then for each open ticket: a live agent → wait; a dirty worktree → a coder continues it; commits beyond the base → a coder continues; nothing → back to ready.
+Re-detect the model (model-plan.md, section 1; detection only), check the version guard and migrate STATE.md to the current shape, show the Approvals line in one line, reconcile with the tracker, then for each open ticket: a live agent → wait; a dirty worktree → a coder continues it; commits beyond the base → a coder continues; nothing → back to ready.

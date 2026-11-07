@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.5.0 — 2026-11-07
+
+Heimdall now runs only when the user names it, plans and switches models only with the user's yes, and asks for each kind of outward action instead of approving one bundle at G2. The harness facts were checked on this date against Claude Code 2.1.319, Codex CLI 0.166.0, Muse Code 1.4.14, and the OpenCode v2.2.5 docs; anything not confirmed is marked UNVERIFIED.
+
+- User-invoked only, in three layers: the SKILL.md description now starts "User-invoked only" and drops its trigger phrases; per-harness off switches stop the model from loading the skill on a description match (`disable-model-invocation: true` in SKILL.md for Claude Code, Cursor, and OpenCode's documented equivalent, and `agents/openai.yaml` with `allow_implicit_invocation: false` for Codex); and the Activation section makes a load the user did not request do nothing. Return phrases such as "continue Heimdall" contain the name, so the guard accepts them. The plugin and marketplace descriptions and the README and INSTALL text say the same.
+- Model detection ladder (references/model-plan.md, section 1): the model is recorded with its source and a confidence level (confirmed, unconfirmed, or unknown). Detection re-runs at every phase boundary, on resume, and after any switch.
+- Model plan per phase (model-plan.md, section 2): Build mode plans the orchestrator's model for planning, the build loop, and QA, with switch points after G3 and after G5. Direct and Prompt modes get a one-line check.
+- Switch protocol (model-plan.md, section 3): at a switch point the skill checkpoints STATE.md. It uses a host tool that sets the session model only after the user says yes; otherwise it stops and gives the exact command. The user answers "continue Heimdall", and the model is re-detected before any work goes on.
+- Pinned dispatch (model-plan.md, section 4): every dispatch passes its model and effort explicitly, never `inherit` and never an omitted flag. A pre-flight compares the packet, the roster row, and the flags. After a headless run the effective model is read from the harness output where it reports one (Claude Code: `modelUsage`), and a mismatch goes to Health.
+- Itemized approvals (production-orchestrator.md, section 8): calibration asks which of four classes the user allows for this build (tracker writes; pushes and pull requests; merges and closes; reverts). `git init`, remote creation, the first G3 tracker publish, installs, long-running processes, and everything else outward are asked individually. A blanket instruction such as "just build it" grants none of them, and STATE.md records the answers.
+- Newer-state guard on resume: a STATE.md written by a newer Heimdall than the installed skill stops the resume and asks the user to update the skill. Heimdall does not migrate it backwards.
+- scripts/validate.sh: checks the "User-invoked only" description, `disable-model-invocation: true`, the Codex policy file, the Activation heading, and that files in `agents/` are listed in SKILL.md.
+- Harness facts (harness-adapters.md, section 2, and the per-harness files): invocation off switches and in-session model switching were checked on 2026-11-07. Confirmed by live headless runs: the `modelUsage` key of the Claude Code JSON result and the `model` field of the stream-json `system/init` event. Still UNVERIFIED: whether Muse honours the frontmatter key at runtime, host tools that set the model outside the Claude desktop app, GitHub Copilot's switches, and the switches of the other harnesses.
+
 ## 1.4.0 — 2026-10-30
 
 Heimdall now asks the user which agent serves each purpose before it dispatches any, instead of choosing them by rule. Before this release the first dispatches (discovery researchers at G0, the scout at G0.5) went to agents the user never saw, and the topology appeared only at G2.

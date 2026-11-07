@@ -4,10 +4,12 @@
      The tracker wins on any disagreement about ticket status (references/execution-loop.md, section 9). -->
 
 Mode: <Build | Build-lite>   Operating mode: <Prototype | MVP | Production>   Class: <C2 | C3>   Profile: <agent | chat>
-Orchestrator: <harness> / <model> / effort <level>   Budget: <tight | standard | generous>
+Orchestrator: <harness> / <model> / effort <level> (confidence: <confirmed | unconfirmed>)   Budget: <tight | standard | generous>
 Tracker: <GitHub owner/repo | Gitea host/owner/repo | local>   Edges: <native | body>   Merge path: <pr | local>
 Integration: <branch> @ <sha>   Worktree root: <path>   Cap: <n> coders
 Topology (the user's agent roster): researcher <harness/model>; scout <harness/model | none>; coders <Light → harness/model, Standard → harness/model, Frontier → harness/model>; reviewer <harness/model>; merger <orchestrator | harness/model>; QA <harness/model>
+Model plan: planning G0–G3 <harness / model / effort; source; confidence>; build loop G4–G5 <harness / model / effort; source; confidence>; QA and ship G6–G7 <harness / model / effort; source; confidence>; switch G3→G4 <host tool | command>, G5→G6 <host tool | command> (model-plan.md, sections 2–3)
+Approvals: tracker writes <allowed | ask> <YYYY-MM-DD>; pushes and pull requests <allowed | ask> <YYYY-MM-DD>; merges and closes <allowed | ask> <YYYY-MM-DD>; reverts <allowed | ask> <YYYY-MM-DD> (production-orchestrator.md, section 8)
 Gates locked: <G1 YYYY-MM-DD, G2 …>   Accepted risks: <grade exceptions, "loop orchestrated at Light tier", or "none">
 Current: <gate, "G3 confirmed, publish pending", or "build loop">
 Tracker comments: progress <comment id | none>; snapshot <comment id(s) | none>   Demo: <not yet | YYYY-MM-DD after wave <n>: <command or URL>>

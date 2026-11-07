@@ -20,6 +20,7 @@ import json, os, re, sys
 root = sys.argv[1]
 skill_dir = os.path.join(root, "skills", "heimdall")
 skill_md = os.path.join(skill_dir, "SKILL.md")
+agent_dir = os.path.join(skill_dir, "agents")
 fails = 0
 
 def p(level, msg):
@@ -105,7 +106,7 @@ if fm is not None:
             p("FAIL", "compatibility must be a string <= 500 chars")
         else:
             p("PASS", f"compatibility ok ({len(c)} chars)")
-    allowed = {"name", "description", "license", "compatibility", "metadata", "allowed-tools"}
+    allowed = {"name", "description", "license", "compatibility", "metadata", "allowed-tools", "disable-model-invocation"}
     for k in fm:
         if k not in allowed:
             p("WARN", f"unexpected frontmatter key: {k}")
@@ -122,6 +123,31 @@ if fm is not None:
             version = md["version"][0]
     elif md is not None:
         p("FAIL", "metadata must be a mapping")
+
+# 2b. user-invoked only: description, frontmatter switch, Codex policy file, Activation section
+if fm is not None:
+    d = fm.get("description")
+    if isinstance(d, str) and d.startswith("User-invoked only"):
+        p("PASS", "description starts with 'User-invoked only'")
+    else:
+        p("FAIL", "description must start with 'User-invoked only' (the skill is user-invoked only)")
+    dmi = fm.get("disable-model-invocation")
+    if dmi == "true":
+        p("PASS", "frontmatter sets disable-model-invocation: true")
+    else:
+        p("FAIL", f"frontmatter disable-model-invocation is {dmi!r}, expected 'true'")
+oai = os.path.join(agent_dir, "openai.yaml")
+if not os.path.isfile(oai):
+    p("FAIL", "skills/heimdall/agents/openai.yaml missing (Codex implicit invocation is not switched off)")
+elif re.search(r"^\s*allow_implicit_invocation:\s*false\s*$", open(oai, encoding="utf-8").read(), re.M):
+    p("PASS", "agents/openai.yaml sets allow_implicit_invocation: false")
+else:
+    p("FAIL", "agents/openai.yaml must set allow_implicit_invocation: false")
+if os.path.isfile(skill_md):
+    if any(ln.strip() == "## Activation — user-invoked only" for ln in body_lines):
+        p("PASS", "SKILL.md has the Activation section (user-invoked only)")
+    else:
+        p("FAIL", "SKILL.md has no '## Activation — user-invoked only' heading")
 
 # 3. body length
 if body_lines:
@@ -143,15 +169,16 @@ refs = [f for f in files_in(ref_dir) if f.endswith(".md")]
 asset_files = files_in(asset_dir)
 assets = [f for f in asset_files if f.endswith(".md")]
 skill_scripts = files_in(skill_scripts_dir)
+agent_files = files_in(agent_dir)
 repo_scripts = files_in(os.path.join(root, "scripts"))
-for d in (ref_dir, asset_dir, skill_scripts_dir):
+for d in (ref_dir, asset_dir, skill_scripts_dir, agent_dir):
     if os.path.isdir(d):
         subs = sorted(x for x in os.listdir(d) if os.path.isdir(os.path.join(d, x)))
         for x in subs:
             p("FAIL", f"{rel(d)}/{x} is a subdirectory (keep these folders one level deep)")
 if os.path.isfile(skill_md):
     st = open(skill_md, encoding="utf-8").read()
-    for kind, names in (("references", refs), ("assets", asset_files), ("scripts", skill_scripts)):
+    for kind, names in (("references", refs), ("assets", asset_files), ("scripts", skill_scripts), ("agents", agent_files)):
         missing = [f for f in names if f not in st]
         for f in missing:
             p("FAIL", f"{kind}/{f} not mentioned in SKILL.md")

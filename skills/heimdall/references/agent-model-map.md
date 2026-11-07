@@ -1,6 +1,6 @@
 # Agent-Model Map
 
-Read at calibration (the recommended rows of the agent roster, calibration.md, section 5), at G2 (execution topology), and for every packet's "For:" line. Heimdall recommends a **tier** per role and per ticket, and the user chooses the agent for each purpose; this file translates the tier into a concrete model, an effort level, and the flag that selects them in each harness. Verified 2026-10-25 from the family files; when vendors ship new models, edit this file and the family file only — no logic changes.
+Read at calibration (the recommended rows of the agent roster and the model plan, calibration.md, section 5), at G2 (execution topology), and for every packet's "For:" line. Heimdall recommends a **tier** per role, per orchestrator phase, and per ticket, and the user chooses the agent for each purpose; this file translates the tier into a concrete model, an effort level, and the flag that selects them in each harness. The phase plan and the switch rules are in model-plan.md. Verified 2026-10-25 from the family files. On 2026-11-07 the pinning rules and the Claude Code switching facts were checked again against Claude Code 2.1.319, and the Codex model key was checked against Codex 0.166.0 (its exact form stays UNVERIFIED). The other rows stay as dated 2026-10-25, and anything in them that the harness files mark UNVERIFIED is not relied on. When vendors ship new models, edit this file and the family file only — no logic changes.
 
 ## Tiers
 
@@ -12,17 +12,21 @@ Budget rule: recommend the LOWEST capable tier; never default upward "to be safe
 
 ## Role defaults
 
-The recommended answer for each roster row; the user's choice replaces it.
+The recommended answer for each roster row and each orchestrator phase; the user's choice replaces it.
 
 | Role | Tier | Effort |
 |---|---|---|
-| Orchestrator | Frontier (Standard acceptable; Light only for the build loop or Build-lite — production-orchestrator.md, section 3) | the family's default; one step higher for G1–G3 |
+| Orchestrator, planning (G0–G3) | Frontier (Standard is the floor; Light declines these gates) | the family's default; one step higher for G1–G3 |
+| Orchestrator, build loop (G4–G5) | Standard; Light only under the Light-tier conditions (production-orchestrator.md, section 3) | the family's default |
+| Orchestrator, QA and ship (G6–G7) | Standard | the family's default |
 | Researcher | Standard (Frontier for synthesis across many sources) | high |
 | Scout | Light | low–medium |
 | Coder | per ticket (set at G3) | Light low · Standard default · Frontier high |
 | Reviewer | Standard; Frontier for High-risk tickets in Production | high |
 | Merger | Standard | medium |
 | QA agent | Standard | high |
+
+The switch point and the switch command for each orchestrator row are in model-plan.md, section 2. Direct and Prompt modes have no phase rows; they use the tiers above through the one-line check in model-plan.md, section 2.
 
 ## Models per family and tier
 
@@ -57,6 +61,7 @@ Details, caveats, and sources live in the family files.
 
 ## Pinning rules
 
+- Every dispatch passes the model and the effort explicitly, through the subagent's model parameter or the headless command's flags. Never `inherit`, never an omitted flag. The pre-flight, the post-run check, and the self-report rules are in model-plan.md, section 4.
 - Pin the model and effort in every packet's "For:" line; consistency within a ticket is the contract.
 - **Auto model selection** (Cursor auto mode and similar): off for Standard and Frontier tickets; acceptable on Light tickets.
 - If a harness cannot pin, say so in the packet and require the red-at-base check for that ticket.

@@ -26,11 +26,19 @@ In the project folder, exactly at these paths (`.heimdall/` is runtime state, li
      unique delimiter (the quotes stop the shell from expanding `$` and backticks inside the content). Choose
      delimiters that never occur in the content, for example HEIMDALL_EOF_01, HEIMDALL_EOF_02, … -->
 
+**Step 0 — git init (separate; run it yourself, and only after you approved git init in chat).** It creates the repository only in a folder that has no `.git` yet, so running it again does nothing:
+
+```bash
+[ -d .git ] || git init -b main
+```
+
+Then the setup script, which stops with a message when step 0 has not run:
+
 ```bash
 #!/usr/bin/env bash
 # heimdall-setup.sh — run once in the project folder: bash heimdall-setup.sh
 set -euo pipefail
-[ -d .git ] || git init -b main
+[ -d .git ] || { echo "No .git here: approve git init in chat and run step 0 first." >&2; exit 1; }
 mkdir -p .heimdall/briefings .heimdall/research .heimdall/tickets .heimdall/design/prototype docs/adr
 grep -qxF '.heimdall/' .git/info/exclude 2>/dev/null || echo '.heimdall/' >> .git/info/exclude
 
@@ -62,11 +70,11 @@ Start a new session in the project folder afterwards (skills load at session sta
 ```
 Use Heimdall. Resume the build in this project: .heimdall/STATE.md is at "G3 confirmed, publish pending".
 Tracker: <GitHub owner/repo | Gitea host/owner/repo | local>. Integration branch: <name>. Merge path: <pr | local>.
-I confirmed the ticket graph in chat: do the G3 publish steps now without asking again — tracker setup, the spec issue, the tickets with their edges, the ticket-checks copy, the bootstrap commit, then push the integration branch (merge path pr).
+I confirmed the ticket graph and answered yes to the publish question in chat: do the G3 publish steps now without asking again — tracker setup, the spec issue, the tickets with their edges, the ticket-checks copy, the bootstrap commit, then push the integration branch (merge path pr).
 Then run the build loop. Stop and report at: every needs-human item, the health rule, the demo checkpoint, and the end of each wave. Refresh the progress report at each stop.
-Standing authorization as recorded in HANDOFF.md, Settled Decisions. Nothing else outward without asking me.
+Approvals as recorded in STATE.md (the Approvals line). Say nothing outward without asking me, except what those approvals allow.
 ```
 
 ## What to bring back here
 
-Paste the updated `.heimdall/STATE.md` and `.heimdall/PROGRESS.md` whenever you want a check-in, a change request, or the G6 and G7 gates run in this chat. Never paste code or diffs; paste reports.
+Paste the updated `.heimdall/STATE.md` and `.heimdall/PROGRESS.md` whenever you want a check-in, a change request, or the G6 and G7 gates run in this chat, and say 'continue Heimdall' with them. Never paste code or diffs; paste reports.

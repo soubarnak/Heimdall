@@ -1,6 +1,6 @@
 # Heimdall Adaptation Report
 
-How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill that takes an idea or an SRS to a shipped application. Written 2026-10-25 for version 1.0.0; updated 2026-10-26 for 1.1.0 (visual progress report, G2.5 prototype) 1.2.0 (loop audit, section 17), 1.3.0 (review and live Light-tier run, section 18), and 1.3.1 (headless launch and grants, section 19); updated 2026-10-30 for 1.4.0 (the user chooses the agents, section 20).
+How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill that takes an idea or an SRS to a shipped application. Written 2026-10-25 for version 1.0.0; updated 2026-10-26 for 1.1.0 (visual progress report, G2.5 prototype) 1.2.0 (loop audit, section 17), 1.3.0 (review and live Light-tier run, section 18), and 1.3.1 (headless launch and grants, section 19); updated 2026-10-30 for 1.4.0 (the user chooses the agents, section 20); updated 2026-11-07 for 1.5.0 (user-invoked only, the model plan, and itemized approvals, section 21).
 
 ## Contents
 
@@ -24,6 +24,7 @@ How a Claude-only prompt bundle became a harness- and model-agnostic Agent Skill
 18. Review and live Light-tier run (2026-10-26, version 1.3.0)
 19. Headless launch and grants for every harness (2026-10-26, version 1.3.1)
 20. The user chooses the agents (2026-10-30, version 1.4.0)
+21. User-invoked only, model switching, and itemized approvals (2026-11-07, version 1.5.0)
 
 ## 1. Summary
 
@@ -87,7 +88,7 @@ Defects found while reading it:
 |---|---|---|
 | Instructions.md | skills/heimdall/SKILL.md | Rewritten as skill entry point with spec-compliant frontmatter; three modes (Build, Direct, Prompt); index of every reference and asset; global rules generalized beyond claude.ai |
 | Workflow Stages — Standard Pipeline.md | references/workflow-stages.md | Kept the 15-stage pipeline and C0–C3 classifier; "Orchestrator mode" became Build mode (C3) and Build-lite (C2); routing and bug handling updated to tickets and reproducing tests |
-| Production Orchestrator — Idea to Shipment.md | references/production-orchestrator.md | Rewritten for an orchestrator that executes: `.heimdall/` runtime layout, gates G0–G7 with tracker publication and a bootstrap commit, budgeting and resume for any harness, standing authorization, podman default |
+| Production Orchestrator — Idea to Shipment.md | references/production-orchestrator.md | Rewritten for an orchestrator that executes: `.heimdall/` runtime layout, gates G0–G7 with tracker publication and a bootstrap commit, budgeting and resume for any harness, approvals (itemized since 1.5.0), podman default |
 | Research Advisor Playbook | references/research-advisor-playbook.md | Kept; now complemented by proactive research (project-research.md) |
 | Checklist & Grading.md | references/checklist-and-grading.md | Kept unchanged |
 | Framework Capability Map.md | references/framework-capability-map.md | Demoted to optional: frameworks supply procedures inside Heimdall's roles and must never run their own orchestration |
@@ -107,7 +108,7 @@ Defects found while reading it:
 
 ## 5. Architecture of the skill
 
-- **Progressive disclosure.** `SKILL.md` (frontmatter plus 104 lines) is all a harness loads at activation. It tells the agent which reference to read at which stage or gate; references and assets load only when needed. All references sit one level deep, as the Agent Skills specification recommends.
+- **Progressive disclosure.** `SKILL.md` (frontmatter plus 104 lines) is all a harness loads when the user invokes Heimdall (section 21). It tells the agent which reference to read at which stage or gate; references and assets load only when needed. All references sit one level deep, as the Agent Skills specification recommends.
 - **Two profiles.** The agent profile (shell and file tools) executes the build. The chat profile (claude.ai, ChatGPT, Meta AI without tools) runs the planning gates and emits packets for a coding agent, which preserves the original copy-paste workflow where nothing better exists.
 - **Runtime state stays out of the repository.** Heimdall writes `.heimdall/` (STATE.md, HANDOFF.md, packets, reports, research digests) and adds it to `.git/info/exclude`. Durable records are the tracker (issues, PRs, labels), `docs/adr/`, and the project's `AGENTS.md`, committed once in a bootstrap commit before any coder runs, so every worktree sees them.
 - **Single sources of truth.** Naming conventions — ticket ids `T<nn>`, branches `heimdall/t<nn>-<slug>`, worktrees under `../<repo>.worktrees/`, packet and report paths, `heimdall:*` labels, and the status tokens (`STATUS:`, `VERDICT:`, `MERGE:`, `RESEARCH:`) — are defined once and cited elsewhere.
@@ -120,7 +121,7 @@ Defects found while reading it:
 | G0 Intake | Classify the input (idea, PRD, SRS); discovery research; bounded interview (at most 4 questions per message, 2 rounds, one recommended answer per question) or SRS gap check | — |
 | G0.5 Recon | Brownfield only: a Scout maps the existing codebase into a repo report | — |
 | G1 Spec | Spec locked from assets/spec.md with user stories, success criteria, NFRs, testing decisions, traceability to SRS ids; operating mode chosen; briefing | Mandatory |
-| G2 Architecture | Researched options, ADRs, module map planned for parallel work, hotspot plan, test seams, tracker choice, integration branch, agent topology (the agent roster the user chose at calibration, with a dispatch method per role), standing authorization for routine outward actions; briefing | Mandatory |
+| G2 Architecture | Researched options, ADRs, module map planned for parallel work, hotspot plan, test seams, tracker choice, integration branch, agent topology (the agent roster the user chose at calibration, with a dispatch method per role), the approvals the user ticked at calibration, itemized in production-orchestrator.md, section 8; briefing | Mandatory |
 | G2.5 Visual direction | UI builds: 2–3 mockups, the user's pick, a prototype of the core screens, design contract | Recommended |
 | G3 Ticket graph | Vertical-slice tickets with acceptance criteria, seams, touch sets, hotspot locks, size and risk, blocking edges; published to the tracker; bootstrap commit | Recommended |
 | G4–G5 Build loop | Scheduler: sync, collect reports, merge approved work, compute the frontier (ready, unblocked, disjoint touch sets and hotspots), order by critical path, dispatch up to the concurrency cap (default 3), checkpoint | Informational |
@@ -231,7 +232,7 @@ Key prompting findings that shape packets (full detail and sources in each famil
 
 ## 12. Installation design
 
-- **Agent Skills specification:** `name` equals the directory name (`heimdall`), description 949 of 1024 characters, compatibility 248 of 500, `metadata` values are strings, body under 500 lines. `scripts/validate.sh` checks all of this.
+- **Agent Skills specification:** `name` equals the directory name (`heimdall`), description under 1024 characters (949 at 1.0.0), compatibility 248 of 500, `metadata` values are strings, body under 500 lines. `scripts/validate.sh` checks all of this.
 - **Install paths:** the universal method, `git clone` plus `scripts/install.sh --harness <name>`, works in every harness that runs bash and is the default the README gives agents; native alternatives are the Claude Code plugin marketplace (this repository is its own marketplace), the Skills CLI (`npx skills add soubarnak/Heimdall`), `muse skills install` from a clone, `pi install git:…`, `gemini skills install`, and Codex `$skill-installer`. Windows without bash gets a PowerShell copy snippet.
 - **scripts/install.sh** links (user scope) or copies (project scope) the skill into `~/.agents/skills`, `~/.claude/skills`, and `~/.qwen/skills` (or the project equivalents, plus `.grok/skills`), detects harnesses on `PATH`, refuses to overwrite directories it did not create without `--force`, and supports `--dry-run` and `--uninstall`.
 - **Public repository:** installs need no credentials. Tracker operations use the user's own `gh` or `tea` sign-in, and the skill never handles tokens.
@@ -338,3 +339,19 @@ Decisions:
 - **Prompt mode is unchanged.** Stage 8 still recommends a model for prompts the user will run elsewhere. Inside Build mode, Stage 8 sets only a ticket's tier, and the roster supplies the agent.
 
 No model or harness facts changed, so the verification dates in agent-model-map.md and the harness files stay as they are.
+
+## 21. User-invoked only, model switching, and itemized approvals (2026-11-07, version 1.5.0)
+
+A user reported four problems. The skill started on its own: its description matched almost any coding or spec request, so harnesses that load skills by description started Heimdall uninvited. Models were assumed rather than planned or switched: the orchestrator's model was never chosen per phase, calibration told the user not to change the model mid-session, and a dispatch could inherit whatever model the parent ran. Model detection was an unlabeled reading of the system prompt. And actions happened without an answer: G0 ran `git init` without asking, G3 published tickets to a remote tracker, and the whole outward scope arrived as one bundle at G2.
+
+Decisions:
+
+- **Three layers, because no single switch covers every harness.** The description carries no trigger phrases (layer 1). Claude Code, Cursor, OpenCode, and Codex each have a switch that keeps the model from loading the skill on a description match (layer 2): verified for Claude Code and Codex, documented for Cursor and OpenCode. The Activation section of SKILL.md makes any load the user did not request do nothing (layer 3). That layer also covers harnesses with no switch, and loads that come from another workflow or from a file in the project. A layer that fails leaves the other two in place.
+- **Self-switching is host-tool-only, and it asks first.** Claude Code has no model-callable tool that changes the session model; `/model` and `--model` are the user's commands. Heimdall therefore changes the model itself only through a host tool that sets it (the desktop app's `set_session_model`), and only after a yes. Otherwise it saves its state, stops, and gives the exact command. A model change alters the cost and the quality of work the user approved, so the user decides it.
+- **Pinning replaces inheritance.** An omitted model flag is not the parent session's model. On 2026-11-07 a headless `claude -p` run with no `--model` used this machine's configured default, `claude-opus-5-5`, not the model of the live session. Every dispatch therefore names its model and effort, and the run is checked afterwards where the harness reports the model it used.
+- **Detection states its confidence.** The ladder records where a model id came from and how sure Heimdall is, so the user can see when a model is only self-reported. Settings and environment variables count as hints, because `/model` in a session overrides them.
+- **Approvals are itemized and asked where they matter.** A bundle approved at G2 covered actions the user had not seen in context. Four classes are ticked once at calibration. Actions that change the user's machine or create a remote are asked one by one even when every class is ticked: `git init`, remote creation, and the first G3 tracker publish. A blanket instruction grants nothing, so every outward step traces back to an answer the user gave.
+
+Verified for this change, on 2026-11-07 with the installed CLIs: `claude -p --output-format json` carries `modelUsage`, keyed by full model id; the stream-json `system/init` event carries `model`; `codex exec --help` lists `-m`, `--json`, and `-o`; `muse exec --help` lists `--model` and `--reasoning-effort`; `muse model-profile show` resolves a catalog model and does not report the running one. Implicit-invocation switches were checked against vendor docs, and `muse skills validate` accepts the frontmatter key.
+
+UNVERIFIED after this change: whether Muse honours the frontmatter key at runtime; Muse's in-session switch; host tools that set the model outside the Claude desktop app; the model field of Codex's `--json` events and the model parameter of its spawn call; the OpenCode mapping of the key to v2.2.5; and the implicit-invocation switches of Gemini CLI (documented command, not run), GitHub Copilot, and the other harnesses.

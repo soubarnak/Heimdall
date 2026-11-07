@@ -1,6 +1,6 @@
 # Harness — Codex CLI
 
-Per-harness adapter (harness-adapters.md, section 3). Verified 2026-10-26 against Codex CLI 0.163.0 (`codex exec --help`) and the Codex config reference on developers.openai.com. Read when the topology uses Codex, at G2 and whenever a packet is dispatched to it.
+Per-harness adapter (harness-adapters.md, section 3). Verified 2026-10-26 against Codex CLI 0.163.0 (`codex exec --help`) and the Codex config reference on developers.openai.com. Model switching and implicit invocation re-checked 2026-11-07 against Codex CLI 0.166.0 (`codex exec --help`: `-m, --model`, `--json`, `-o`). Read when the topology uses Codex, at G2 and whenever a packet is dispatched to it.
 
 ## Subagents
 
@@ -18,6 +18,13 @@ Run every command from the main checkout; `-C` sets the working directory, so no
 - **Merger:** as the coder.
 - `-o` writes the final message to the report path (when the file appears during the run is UNVERIFIED; read it only after the PID has exited). `--json` streams JSONL; `--output-schema <file>` constrains the final message; `--ephemeral` keeps no session files.
 - Sandbox `-s read-only|workspace-write|danger-full-access`; approvals `-a <policy>` (top-level `codex`).
+
+## Model detection and switching
+
+- **Detection:** the `model` key in `~/.codex/config.toml` is the configured default. Read that one key, never the whole file and never the auth file. A `/model` choice in the session overrides it. Whether the `--json` events name the model is UNVERIFIED, so until it is confirmed the report's `Coder:` line is the self-report, and Heimdall asks the user to confirm the model when the plan needs it (model-plan.md, section 1).
+- **Switch:** the user runs `/model` in the session. No host tool that sets the Codex session model is verified, so Heimdall gives the command and waits for "continue Heimdall" (model-plan.md, section 3). Headless runs take `-m <model>` and `-c model_reasoning_effort="<level>"` on every command.
+- **Subagents:** pin each spawned subagent's model and effort. The `agents.default_subagent_model` and `agents.default_subagent_reasoning_effort` keys are a fallback only; the spawn call's model parameter is UNVERIFIED.
+- **Implicit invocation:** `agents/openai.yaml` in the skill folder sets `policy:` `allow_implicit_invocation: false` (checked 2026-11-07, Codex CLI 0.166.0). Explicit `$heimdall` still works.
 
 ## Notes
 

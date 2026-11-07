@@ -34,7 +34,7 @@ Do not modify the skill files during installation. Do not install Docker; Heimda
 | GitHub Copilot | `copilot` | — | ask "use Heimdall" |
 | Chat app (claude.ai, ChatGPT, Meta AI) | — | see "Chat apps" | — |
 
-Every harness also activates the skill from its description when the user says "use Heimdall" or "take this idea to shipment".
+Invocation is explicit only. Heimdall runs when the user names it in the request (`/heimdall`, `$heimdall`, the skill picker, or "use Heimdall"); no harness starts it because a request matches its description. The install ships each harness's off switch: `disable-model-invocation: true` in SKILL.md (Claude Code and Cursor; OpenCode documents the same key) and `agents/openai.yaml` (Codex CLI). Where a harness has no verified switch, the skill's own Activation section makes an unrequested load do nothing. The "Invoke with" column gives the explicit forms; `ask "use Heimdall"` is also explicit.
 
 ## A. Universal method: clone and install script
 
@@ -152,6 +152,7 @@ Each installed target prints `name: heimdall`. Then the user starts a new sessio
 - Claude Code: `/heimdall` (or `/heimdall:heimdall`) appears in the slash-command menu.
 - Codex CLI: `/skills` lists `heimdall`.
 - Muse Code: `muse skills validate <path>` reports the skill as valid.
+- Not loaded by accident: a prompt that does not name Heimdall must not load it. In a scratch folder, `claude -p "Write a short spec for a todo app."` (and `codex exec "Write a short spec for a todo app."` in Codex) must not start calibration or create `.heimdall/`. Then name it, for example `claude -p "/heimdall Write a short spec for a todo app."`; it should begin calibration.
 
 From a clone you can also run the repository's own checks: `scripts/validate.sh`.
 
@@ -173,6 +174,8 @@ Other prerequisites for Build mode: git 2.38 or later (for `git merge-tree --wri
 | B. Claude plugin | `claude plugin marketplace update heimdall`, then `claude plugin update heimdall@heimdall` | `claude plugin uninstall heimdall@heimdall` |
 | C. Skills CLI | `npx skills update` | `npx skills remove heimdall` |
 | D, E, F, G | run the install command again | the harness's skill-removal command, or delete the skill folder |
+
+**Updating.** A linked install (method A, user scope) updates with `git -C ~/.local/share/heimdall pull --ff-only`. Re-run `install.sh` only to add a harness target. Sessions must restart afterwards: a running session keeps the skill it loaded.
 
 ## Troubleshooting
 

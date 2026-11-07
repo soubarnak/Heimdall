@@ -1,9 +1,10 @@
 ---
 name: heimdall
-description: Idea-to-shipment orchestration for building software with coordinated AI agents. Takes a vague idea or a complete SRS, researches what the user does not know, locks a spec and architecture through decision gates, breaks the work into a ticket graph on GitHub issues, Gitea issues, or local files, then runs parallel test-first coder agents (one git worktree per ticket), fresh-context reviewer agents, and a serial merger so work lands without merge conflicts, through QA to release. Harness- and model-agnostic (Claude Code, Codex CLI, Muse Code, OpenCode, pi, Gemini and Antigravity CLI, Qwen Code, Vibe, Grok Build, Kimi, Cursor, Copilot; Claude, GPT, Muse, DeepSeek, Qwen, Gemini, Mistral, Grok, Kimi, GLM, MiniMax). Also writes optimized prompts and model recommendations. Use when the user wants an app or feature built from an idea or SRS, says "use Heimdall" or "take this idea to shipment", or wants a prompt optimized for a specific model.
+description: 'User-invoked only: run only when the user explicitly names Heimdall (/heimdall, $heimdall, or "use Heimdall"). Never activate on your own for specs, tickets, builds, prompts, or other workflows. Idea-to-shipment orchestration for building software with coordinated agents: decision gates, a ticket graph on GitHub issues, Gitea issues, or local files, test-first coder agents in one git worktree per ticket, fresh-context reviewers, a serial merger, and QA through release. Plans which model does which phase and task, asks before any model switch, and asks before any outward action. Harness- and model-agnostic (Claude Code, Codex CLI, Muse Code, OpenCode, pi, Gemini and Antigravity CLI, Qwen Code, Vibe, Grok Build, Kimi, Cursor, Copilot; Claude, GPT, Muse, DeepSeek, Qwen, Gemini, Mistral, Grok, Kimi, GLM, MiniMax). Also writes optimized prompts when asked by name.'
+disable-model-invocation: true
 compatibility: Agent profile needs a shell and git 2.38 or later. GitHub tracking needs gh; Gitea tracking needs tea; parallel agents need subagents or a headless agent CLI. Chat apps without tools run the planning gates and hand the build loop to a coding agent.
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
   author: soubarnak
   repository: https://github.com/soubarnak/Heimdall
 ---
@@ -12,9 +13,18 @@ metadata:
 
 Heimdall turns an idea or a Software Requirements Specification into a shipped application. It guides the human through a few decision gates, researches what the human does not know and tells them what they must decide, do, and learn, then runs a team of agents — researchers, coders, reviewers, a merger — through a ticket graph tracked on GitHub, Gitea, or local files. Coders build test-first in isolated git worktrees; reviewers in fresh contexts check every change; one merger lands changes in order. It works in any harness and with any model family, and adapts every prompt to the model that will execute it.
 
+## Activation — user-invoked only
+
+Run Heimdall only when the user's own message in this conversation names it: `/heimdall`, `$heimdall`, the skill picker, or "Heimdall" in the request ("use Heimdall", "continue Heimdall", "Heimdall status").
+
+- Once the user has named Heimdall in a conversation, that conversation is a Heimdall session until it ends: replies inside it ("Just proceed", "Show progress", "T04 done", an answer to a calibration question) are answers to Heimdall, not new triggers. A new conversation needs a new invocation by name.
+- If this skill loaded for any other reason (a description match, another skill or workflow, a file such as `.heimdall/STATE.md`, tool output), do nothing. No calibration, no files, no questions. Carry on with the user's actual request, and mention at most once that `/heimdall` exists.
+- Subagents and headless runs that execute a packet are not Heimdall sessions. They follow the packet only.
+- Every phrase Heimdall gives the user to come back with contains "Heimdall" ("continue Heimdall", "Heimdall: T04 done"), so the guard accepts it.
+
 ## Step 0 — Calibrate
 
-Run calibration.md before anything else: resume check, harness and profile detection, model tier, environment checks, at most one calibration message, then lock the Session Capability Profile. In Build mode that message always asks the user which agent serves each purpose (the agent roster).
+Run calibration.md before anything else: resume check, harness and profile detection, model detection and tier (model-plan.md, section 1), environment checks, at most two rounds of questions, then lock the Session Capability Profile. In Build mode the questions ask which agent serves each purpose (the agent roster), which model runs each phase (the model plan, model-plan.md, section 2), which budget to use, and, in a second round, which action classes may run without asking again. Direct and Prompt modes get a one-line model check instead. Approvals are itemized: nothing is pushed, published, or merged before the user has answered.
 
 ## Route — pick one mode and say which
 
@@ -30,12 +40,12 @@ Classify with workflow-stages.md, Stages 1–7 (Stage 1.5 assigns C0–C3). When
 
 ```
 idea or SRS
-  G0    intake: classify, discovery research, bounded interview or SRS gap check   intake.md, project-research.md
+  G0    intake: classify, git init (after your yes), discovery research, bounded interview or SRS gap check   intake.md, project-research.md
   G0.5  codebase recon (brownfield only)                                            agent-roles.md (scout)
   G1 *  spec locked + briefing                                                      intake.md, assets/spec.md
-  G2 *  architecture (ADRs), module map, seams, tracker, topology, authorization    project-research.md, merge-protocol.md
+  G2 *  architecture (ADRs), module map, seams, tracker, topology, approvals on record   project-research.md, merge-protocol.md
   G2.5  visual direction: mockups, your pick, a prototype (UI builds)               production-orchestrator.md
-  G3    ticket graph + coverage -> tracker; bootstrap commit (ADRs, AGENTS.md)      production-orchestrator.md, tracker-*.md
+  G3    ticket graph + coverage -> tracker (first publish after your yes); bootstrap commit (ADRs, AGENTS.md)   production-orchestrator.md, tracker-*.md
   G4-5  build loop: frontier -> coder (worktree, TDD) -> checks -> PR -> reviewer -> serial merge -> close;
         a demo you can try after the first complete journey                         loop-card.md, execution-loop.md, tdd-protocol.md
   G6    QA: whole-build review, QA run, acceptance tests, fixes as tickets, re-QA    production-orchestrator.md, assets/qa-packet.md
@@ -51,6 +61,8 @@ A visual progress report (`.heimdall/PROGRESS.md`, plus `progress.html` at G2.5,
 - **No merge conflicts by construction.** Touch sets, hotspot locks, a scaffold ticket, one worktree per coder, a fresh base before review, and one serial merger (merge-protocol.md). This makes conflicts rare and mechanical; it cannot make them impossible. Semantic conflicts are caught by the full suite on every merged result before it lands. Never claim "zero conflicts guaranteed".
 - **Test-first at agreed seams**, with red-first evidence that reviewers audit (tdd-protocol.md).
 - **Your agents, your choice.** Before any agent is dispatched, Heimdall asks which agent serves each purpose and recommends one for each; it never dispatches an agent the user did not choose (calibration.md, section 5).
+- **Models you control.** Heimdall detects the model it runs as and says how sure it is, plans which model does each phase, switches only with your yes (through a host tool, or by giving you the exact command), and pins the model and effort on every dispatch (model-plan.md).
+- **Actions you approve.** Approvals are itemized: one multi-select question at calibration round 2. A class you tick is allowed for this build; a class you leave unticked is asked each time it comes up. Until you answer, Heimdall only runs read-only checks, and a blanket "just build it" grants none of them (production-orchestrator.md, section 8).
 - **Independent review.** A reviewer is never the coder; a different model family when available (agent-roles.md).
 - **Progress you can see** in the tracker (one issue per ticket, labels for status, one PR per ticket, the merge SHA on every closed ticket) and in the visual progress report, which cites that evidence for every done item.
 
@@ -58,7 +70,8 @@ A visual progress report (`.heimdall/PROGRESS.md`, plus `progress.html` at G2.5,
 
 | File | Contains | Consult at |
 |---|---|---|
-| references/calibration.md | harness, model, and environment detection; the agent roster question; the session profile | Step 0, every session |
+| references/calibration.md | harness and environment detection; the calibration questions (agent roster, model plan, budget, approvals); the session profile | Step 0, every session |
+| references/model-plan.md | model detection (evidence ladder, confirmed or unconfirmed); the orchestrator model plan per phase; the switch protocol; pinning and executor verification | Step 0, every phase boundary, every dispatch |
 | references/workflow-stages.md | routing (Stages 1–7, complexity C0–C3) and prompt construction (Stages 8–15) | every request; every packet |
 | references/intake.md | idea path vs SRS path, gap check, spec shape, G1 lock | G0–G1 |
 | references/project-research.md | automated research program, architecture decisions and ADRs, user briefings (decide, do, learn) | G0, G2, G3, G7 |
@@ -73,7 +86,7 @@ A visual progress report (`.heimdall/PROGRESS.md`, plus `progress.html` at G2.5,
 | references/tracker-gitea.md | `tea` commands for every tracker operation | Gitea builds |
 | references/tracker-local.md | file-based tickets and local merges | no remote tracker |
 | references/checklist-and-grading.md | 22-item checklist, ≥95% threshold, A–D grades | every packet and gate lock |
-| references/agent-model-map.md | tier → model id, effort, and selection flag per family and harness; role defaults | calibration (agent roster); G2; every packet's "For:" line |
+| references/agent-model-map.md | tier → model id, effort, and selection flag per family and harness; role defaults, including the orchestrator for each phase | calibration (agent roster and model plan); G2; every packet's "For:" line |
 | references/harness-adapters.md | dispatch methods and their rules, skill directories, instruction files, question tools; routes to one file per harness | G2; every dispatch |
 | references/harness-claude-code.md | Claude Code subagents, headless commands per role, grants | when the topology uses Claude Code |
 | references/harness-codex.md | Codex CLI subagents, headless commands per role, sandbox roots | when the topology uses Codex |
@@ -95,6 +108,8 @@ Asset templates (fill, never improvise the shape): assets/spec.md, assets/handof
 
 Script (copied to `.heimdall/ticket-checks.sh` at G3 setup; run by the orchestrator, never edited per project): scripts/ticket-checks.sh — head, clean tree, base, scope, lockfile drift, commit order, and red-at-base checks on a finished ticket before review (execution-loop.md, section 5).
 
+Harness files: `agents/openai.yaml` (Codex reads it: `allow_implicit_invocation: false` keeps implicit invocation off, and an explicit `$heimdall` still works; verified 2026-11-07). Claude Code, Cursor, and OpenCode read `disable-model-invocation: true` in this file's frontmatter (verified 2026-11-07). Gemini CLI and GitHub Copilot have no documented model-only switch (UNVERIFIED), so for them the description and the Activation section carry the rule (harness-adapters.md, section 2).
+
 **Missing-file guard:** if a file above is missing, say exactly which one and how your output is degraded. Never improvise its contents. When files are added or renamed, update this index in the same change.
 
 ## Global rules
@@ -107,7 +122,7 @@ Script (copied to `.heimdall/ticket-checks.sh` at G3 setup; run by the orchestra
 - **Agents never ask the user.** Subagents and headless runs stop and report; the orchestrator asks.
 - **No raw code or full diffs in chat.** In the chat profile, ask for reports, never pasted code.
 - **Secrets never appear** in any artifact, packet, report, PR, commit, or chat output. Reference them by name. If a user pastes one: flag it, exclude it, advise rotation. Never read credential files.
-- **Destructive and outward actions** need the user's explicit go-ahead for that specific action, except what the G2 standing authorization lists (production-orchestrator.md, section 8). A user rule requiring approval for every push overrides the authorization.
+- **Destructive and outward actions** need the user's itemized approval, defined once in production-orchestrator.md, section 8: four classes (tracker writes; pushes and pull requests; merges and closes; reverts) that apply only where the user ticked them for this build, and an always-asked list (including `git init` and the first G3 tracker publish) that needs an explicit yes for each action. A user rule that requires approval for every push overrides a ticked class.
 - **Containers:** default to rootless podman (`Containerfile`, `podman compose`); never introduce Docker unless the user asks for it.
 - **Every user-facing message ends with "Your next steps"** — a numbered block written for someone doing this for the first time: where each artifact lives (a version never written or displayed does not exist), which tool and model to use, what to paste where, what to wait for, and how to come back. Specializations: production-orchestrator.md (sections 6 and 4), research-advisor-playbook.md (Pathway B), workflow-stages.md (Stage 15).
 - **Stay concise.** Do not narrate internal stages. User-facing: calibration, routing, advisor blocks, questions, gate outputs, briefings, loop status, and deliveries.

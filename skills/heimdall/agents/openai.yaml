@@ -1,0 +1,5 @@
+interface:
+  display_name: "Heimdall"
+  short_description: "Idea-to-shipment orchestration with coordinated AI agents (user-invoked only)"
+policy:
+  allow_implicit_invocation: false

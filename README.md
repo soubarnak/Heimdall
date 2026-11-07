@@ -101,6 +101,10 @@ This makes conflicts rare and mechanical. It does not make them impossible, and 
 
 ## Usage
 
+### How Heimdall starts
+
+Heimdall runs only when you name it: `/heimdall`, `$heimdall`, the skill picker, or "use Heimdall" in your request. It never starts on its own. A request for a spec, tickets, or an app that does not name it gets an ordinary answer. Where a harness allows it, the install also switches off model-side loading from the skill's description (INSTALL.md, the paragraph below the harness table).
+
 ### Start
 
 After installing, start a new session in your project folder and invoke Heimdall (the last column of the install table), or say "use Heimdall". Examples:
@@ -129,7 +133,7 @@ Heimdall first calibrates: it detects the harness, the model, and the tools avai
 | G0 Intake | the classification, a discovery research digest, and a few questions (or a gap check of your SRS) | answer, or say "Just proceed" |
 | G0.5 Recon (existing code only) | a short report on the codebase | confirm |
 | G1 Spec | the spec with user stories and success criteria, its grade, the operating mode, and a briefing | **sign off**, or ask for changes |
-| G2 Architecture | decision blocks with recommendations, ADRs, test seams, the tracker, the agent topology (the agents you chose at calibration, shown for the record), the standing authorization, a setup packet, and a briefing | **sign off**; do the briefing's "What you need to do" items (accounts, keys set by name) |
+| G2 Architecture | decision blocks with recommendations, ADRs, test seams, the tracker, the agent topology (the agents you chose at calibration, shown for the record), the approvals you ticked at calibration (shown for the record), a setup packet, and a briefing | **sign off**; do the briefing's "What you need to do" items (accounts, keys set by name) |
 | G2.5 Design (UI builds) | 2–3 mockups of the key screen, then a prototype of the core screens in the direction you picked | pick one; confirm the prototype |
 | G3 Tickets | a numbered ticket list with dependencies and waves, including one end-to-end acceptance test per success criterion | confirm; Heimdall publishes the tickets and makes the bootstrap commit |
 | G4–G5 Build loop | tracker updates, progress reports, and one demo once the first user journey works | nothing, unless it stops for you; try the demo and say what feels wrong |
@@ -150,7 +154,7 @@ At G1 and G2 Heimdall shows the artifacts first and then asks one question whose
 - **Health check:** when 2 of the last 4 merged tickets needed retries, a stronger model, or every allowed fix round, it pauses new work and reports the cause. A ticket gets at most 2 rounds of review changes; rounds that repair a merge conflict with another ticket do not count against it.
 - **Demo:** once the first user journey works, Heimdall starts the application (or gives you the command) with three steps to try. A bug you find becomes a fix ticket; anything new becomes a change request. The rest of the build keeps going.
 - **Revision loop:** when the build shows that the architecture or the ticket graph is wrong, it brings you back to G2 or G3.
-- **Actions outside the standing authorization** (below) always wait for your go-ahead.
+- **Actions outside the approvals you ticked** (below) always wait for your go-ahead.
 
 ### Changes and bugs
 
@@ -164,13 +168,20 @@ At G1 and G2 Heimdall shows the artifacts first and then asks one question whose
 - To resume, open a new session in the project — any harness, any model — and invoke Heimdall. It reads STATE.md, re-checks the environment, reconciles with the tracker (the tracker wins), checks whether agents from the earlier session are still running, and continues where it stopped.
 - With GitHub or Gitea, Heimdall also keeps a snapshot of STATE.md and HANDOFF.md as one comment on the spec issue, so a fresh clone on another computer can resume. With local tickets, `.heimdall/` is the only copy: back it up with the project.
 - Start a fresh session after G2, after G3, and every few merges on a tight budget.
-- Do not switch the model or effort in the middle of a session. If you must, tell Heimdall so it recalibrates.
+- **Switching the model or effort.** Calibration writes a model plan for each phase and names the switch points: after G3 (planning to the build loop) and after G5 (the build loop to QA). Switch only at those points, or tell Heimdall that you switched; it re-detects the model at every phase boundary and on resume. Heimdall can change the model itself only through a host tool that sets the session model, and only after your yes. Otherwise it saves its state, stops, and gives you the exact command (for example `/model <alias>` in Claude Code). Then say "continue Heimdall".
 
-### What Heimdall does without asking
+### Approvals
 
-At G2 you approve a standing authorization (its full list lives in the skill's production-orchestrator.md, section 8). With it, the build loop creates and labels issues, milestones, and comments; pushes `heimdall/*` branches and deletes them once merged; pushes the integration branch (the bootstrap commit and each merge); opens pull requests; merges approved pull requests into the integration branch; closes tickets; and reverts a breaking merge with a new commit.
+Approvals are itemized, not one bundle. In Build mode, calibration asks which of four classes Heimdall may use for this build. Each class you tick is allowed for this build; each class you leave unticked is asked every time:
 
-Everything else waits for your explicit go-ahead, every time: force-pushes, deleting data or non-Heimdall branches, migrations without a backup, merging or pushing to the default branch when it is not the integration branch, deploying, tagging, publishing, changing repository settings, spending money, and sending messages. If you want to approve every push, say so: Heimdall then merges locally and pushes only at checkpoints you approve.
+1. **Tracker writes:** create and label issues, milestones, and comments, including Heimdall's own progress and snapshot comments.
+2. **Pushes and pull requests:** push `heimdall/*` branches and the integration branch (the bootstrap commit and each merge), and open pull requests.
+3. **Merges and closes:** merge approved pull requests into the integration branch, close tickets, and delete merged `heimdall/*` branches.
+4. **Reverts:** revert a breaking merge with a new commit.
+
+Some actions are always asked one by one, even when you ticked every class: `git init`, creating a remote repository, the first tracker publish at G3, dependency installs and other setup on your machine, and starting long-running processes such as the demo's dev server. Also asked one by one: force-pushes, deleting data or non-Heimdall branches, migrations without a backup, merging or pushing to the default branch when it is not the integration branch, deploying, tagging, publishing, changing repository settings, spending money, and sending messages.
+
+Until you answer the approvals, Heimdall makes no outward change: it runs read-only checks, writes only untracked files under `.heimdall/`, and dispatches only the agents you chose. A blanket instruction such as "just build it" grants none of these. If you leave the pushes class unticked, Heimdall merges locally and pushes only at checkpoints you approve. The full list lives in the skill's production-orchestrator.md, section 8, and STATE.md records your answers.
 
 Secrets stay out of everything Heimdall writes. It names them ("set STRIPE_SECRET_KEY in .env") and never reads their values; if you paste one, it flags it, leaves it out, and advises you to rotate it.
 
@@ -205,8 +216,9 @@ In a chat app without file tools (claude.ai, ChatGPT, Meta AI), Heimdall runs G0
 
 ```
 skills/heimdall/            the skill (copy or link this folder into a harness)
-  SKILL.md                  entry point: calibration, routing, Build mode overview, global rules
-  references/               protocols loaded on demand (32 files)
+  SKILL.md                  entry point: activation, calibration, routing, Build mode overview, global rules
+  agents/openai.yaml        Codex harness file: turns off implicit invocation, so Codex loads Heimdall only when named
+  references/               protocols loaded on demand (33 files)
   assets/                   templates for specs, tickets, packets, reports, ADRs, briefings, state, progress report, QA, release, research, kickoff, AGENTS.md (24 files)
   scripts/ticket-checks.sh  the mechanical ticket checks, copied into each project at G3
 scripts/install.sh          installs the skill into every detected harness

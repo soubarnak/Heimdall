@@ -1,6 +1,6 @@
 # Harness — Muse Code
 
-Per-harness adapter (harness-adapters.md, section 3). Verified 2026-10-25 against Muse Code 1.4.13 (`muse --help`, `muse exec --help`) and dev.meta.ai; approval and permission flags re-checked 2026-10-26 (`muse exec --help`). Read when the topology uses Muse Code, at G2 and whenever a packet is dispatched to it.
+Per-harness adapter (harness-adapters.md, section 3). Verified 2026-10-25 against Muse Code 1.4.13 (`muse --help`, `muse exec --help`) and dev.meta.ai; approval and permission flags re-checked 2026-10-26 (`muse exec --help`); model flags and implicit invocation re-checked 2026-11-07 against Muse Code 1.4.14 (`muse --help`, `muse exec --help`, `muse model-profile show --help`). Read when the topology uses Muse Code, at G2 and whenever a packet is dispatched to it.
 
 ## Subagents
 
@@ -19,3 +19,9 @@ Run every command from the main checkout. Launch, wait, and capture follow harne
 
 - Install from a local path: `muse skills validate <path>`, then `muse skills install <path> --scope user`. `muse skills list --source all` shows what loaded.
 - The default model differs between the docs (`muse-spark-1.2`) and the local catalog (`muse-wonder-1.0`): pin the model explicitly.
+
+## Model detection and switching
+
+- **Detection:** none verified. `muse model-profile show <model> [--effort <tier>]` prints what a catalog model resolves to; it does not report the model that is running. The settings key that holds the default model is UNVERIFIED, so Heimdall does not read settings for it. Heimdall asks the user to confirm the model (model-plan.md, section 1).
+- **Switch:** `--model <id>` on every `muse exec` (the coder, reviewer, and merger commands above), with `--reasoning-effort <level>` (alias `--effort`). A switch in the interactive session is UNVERIFIED: the user makes it, and Heimdall waits for "continue Heimdall" (model-plan.md, section 3).
+- **Implicit invocation:** `muse skills validate` accepts `disable-model-invocation` (checked 2026-11-07). Whether Muse honours it at runtime is UNVERIFIED, so the description and the Activation section of SKILL.md are the guard.

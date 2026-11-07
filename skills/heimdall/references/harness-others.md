@@ -1,6 +1,8 @@
 # Harnesses — OpenCode, pi, Gemini CLI, Antigravity CLI, Qwen Code, Mistral Vibe, Grok Build, Kimi Code CLI, Cursor, GitHub Copilot
 
-Per-harness adapters (harness-adapters.md, section 3). Verified 2026-10-25 against vendor docs (Context7 and official pages) and the locally installed CLIs OpenCode 2.1.4, pi 1.4.0, and Antigravity CLI 1.4.6; launch rules, OpenCode permissions, and the pi and agy grant flags re-checked 2026-10-26. Rows marked UNVERIFIED come from a third-party summary only. Read the section for each harness in the topology, at G2 and whenever a packet is dispatched to it.
+Per-harness adapters (harness-adapters.md, section 3). Verified 2026-10-25 against vendor docs (Context7 and official pages) and the locally installed CLIs OpenCode 2.1.4, pi 1.4.0, and Antigravity CLI 1.4.6; launch rules, OpenCode permissions, and the pi and agy grant flags re-checked 2026-10-26. Rows marked UNVERIFIED come from a third-party summary only. Invocation switches for OpenCode, Cursor, and Gemini CLI were checked 2026-11-07 against vendor docs (the OpenCode mapping to v2.2.5 is not confirmed). Read the section for each harness in the topology, at G2 and whenever a packet is dispatched to it.
+
+**Model detection, switching, and invocation, all harnesses in this file.** Where a headless command below takes a model flag, the flag is shown in its section. Mistral Vibe's command takes an agent instead, so which model that agent runs is UNVERIFIED here. Detection of the running model and any in-session switch are UNVERIFIED for every harness here, so Heimdall asks the user to confirm the model and to make any switch the plan needs (model-plan.md, sections 1 and 3). Implicit-invocation switches are listed under OpenCode, Gemini CLI, Cursor, and GitHub Copilot. For pi, Antigravity CLI, Qwen Code, Mistral Vibe, Grok Build, and Kimi Code CLI none is verified, so the description and the Activation section of SKILL.md are the guard.
 
 Every headless command runs from the main checkout and enters the worktree in a subshell. Launch, wait, and capture follow harness-adapters.md, section 1: background with `exec` — `(cd <worktree> && exec <command> > <abs report> 2> <abs report base>.log) & echo $!` — record `$!` in STATE.md (In flight), and treat the run as finished only when that PID has exited; a report file that exists while the PID is alive is not a result. Reviewers run no scripts: the red-at-base result comes from the orchestrator's check report (`.heimdall/reports/T<nn>-checks-<round>.md`). Where a harness below has no per-command grants, the reviewer's shell is limited only by the packet; prefer a Claude Code or OpenCode reviewer when the topology has one.
 
@@ -27,6 +29,7 @@ Every headless command runs from the main checkout and enters the worktree in a 
   The `<…>` commands are the full prefixes from HANDOFF's Commands (`node --test`, `npm run typecheck`), never `node` or `npm`. Each gets a bare rule and a `*` rule, because whether `"x *"` also matches `x` with no arguments is UNVERIFIED. Reading `.heimdall/` in the main checkout from a worktree is outside the workspace: add an `external_directory` allow rule for the main checkout's path (behavior UNVERIFIED). A coder agent allows `edit` and `shell` and denies `{ action: shell, resource: "git push *" }`.
 - Headless: `(cd <worktree> && exec opencode run -m <provider/model> --agent <agent> -f <abs packet> "Execute the attached packet." > <abs report> 2> <abs report base>.log) & echo $!`; stdout holds the response in text mode (capture UNVERIFIED on this machine); `--format json` emits events instead. `--auto` approves everything not explicitly denied — consent required.
 - Muse via OpenCode loses reasoning across turns (`@ai-sdk/openai-compatible`); prefer Muse Code for Muse executors.
+- Implicit invocation: top-level `disable-model-invocation: true` is documented as equal to `metadata.opencode/autoinvoke: false`. The model stops seeing the skill, and `@heimdall` still loads it. Whether v2.2.5 maps the key is not confirmed (UNVERIFIED).
 
 ## pi
 
@@ -41,6 +44,7 @@ Every headless command runs from the main checkout and enters the worktree in a 
 - Install from Git: `gemini skills install https://github.com/<owner>/<repo>.git --path skills/heimdall --consent` (`--scope user|workspace`). Private-repo auth UNVERIFIED.
 - Add `"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}` so project AGENTS.md files load.
 - Gemini CLI was replaced by Antigravity CLI for unpaid and Google One users on 2026-06-18.
+- Implicit invocation: no skill key is documented. The user can run `/skills disable heimdall` (user scope) to stop the model from loading it; the command is documented and was not run here.
 
 ## Antigravity CLI (`agy`)
 
@@ -72,7 +76,9 @@ Every headless command runs from the main checkout and enters the worktree in a 
 
 - Skills from `.agents/skills/`, `.cursor/skills/`, and the Claude and Codex directories. Subagents in `.cursor/agents/` (`model`, `readonly`, `is_background`), invoked as `/name`; a reviewer subagent sets `readonly`.
 - Coder packets are usually user-driven: open the ticket's worktree folder in Cursor. Turn auto model selection off for Standard and Frontier tickets (consistency).
+- Implicit invocation: top-level `disable-model-invocation: true` makes the skill load only through `/heimdall` (checked 2026-11-07).
 
 ## GitHub Copilot
 
 - Skill locations "depend on the surface": `.github/skills`, `.agents/skills`, `.claude/skills` (project), `~/.copilot/skills` or `~/.agents/skills` (user). Plugins: `copilot plugin marketplace add <owner>/<repo>`, `copilot plugin install <plugin>@<marketplace>`.
+- Implicit invocation: nothing documented (UNVERIFIED); the description and the Activation section of SKILL.md are the guard.
